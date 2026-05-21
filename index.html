@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rapoarte SSM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#f4f3ef;--surface:#fff;--surface2:#f9f8f5;--border:#dddbd4;
+  --border-strong:#b8b5ac;--text:#1a1917;--text-muted:#6b6860;
+  --text-faint:#9b9890;--accent:#1a4d8f;--accent-light:#e8eef7;
+  --accent-dark:#0f3060;--yes:#1a6b3c;--yes-bg:#eaf5ee;
+  --danger:#c0392b;--radius:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
+.topbar{background:var(--accent);color:#fff;padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-icon{width:30px;height:30px;background:rgba(255,255,255,0.15);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.topbar-icon svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.topbar-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;}
+.topbar-sub{font-size:11px;opacity:0.6;margin-top:1px;}
+.status-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border-radius:20px;padding:4px 12px;font-size:11px;opacity:0.9;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;}
+.status-dot.loading{background:#fbbf24;animation:pulse 1s infinite;}
+.status-dot.error{background:#f87171;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.main{display:flex;height:calc(100vh - 54px);overflow:hidden;}
+.sidebar{width:360px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
+.sidebar-toolbar{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.search-wrap{position:relative;}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text-faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+.search-input{width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--accent);}
+.toolbar-row{display:flex;gap:8px;align-items:center;}
+.sort-select{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:12px;color:var(--text-muted);outline:none;cursor:pointer;}
+.count-badge{font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.file-list{flex:1;overflow-y:auto;padding:8px;}
+.file-list::-webkit-scrollbar{width:3px;}
+.file-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);cursor:pointer;transition:background 0.1s,border-color 0.1s;border:1px solid transparent;margin-bottom:3px;}
+.file-item:hover{background:var(--accent-light);border-color:#c8d8ef;}
+.file-item.active{background:var(--accent-light);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+.file-icon{width:34px;height:34px;border-radius:7px;background:#e8eef7;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.file-icon svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.file-item.active .file-icon{background:var(--accent);}
+.file-item.active .file-icon svg{stroke:#fff;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'IBM Plex Mono',monospace;color:var(--text);}
+.file-meta{font-size:11px;color:var(--text-muted);display:flex;gap:8px;margin-top:2px;flex-wrap:wrap;}
+.file-meta span{display:flex;align-items:center;gap:3px;}
+.file-meta svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.badge-new{font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--yes-bg);color:var(--yes);flex-shrink:0;}
+.state-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;color:var(--text-muted);font-size:13px;text-align:center;}
+.spinner{width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.preview{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.preview-toolbar{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
+.preview-filename{flex:1;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-family:'IBM Plex Mono',monospace;}
+.preview-filename.empty{color:var(--text-faint);font-family:inherit;font-weight:400;font-size:13px;}
+.btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border-strong);background:transparent;font-family:inherit;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:background 0.1s,color 0.1s;white-space:nowrap;text-decoration:none;}
+.btn:hover{background:var(--surface2);color:var(--text);}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff;}
+.btn:disabled{opacity:0.4;pointer-events:none;}
+.preview-body{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;}
+.preview-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-faint);text-align:center;padding:40px;}
+.preview-empty svg{width:44px;height:44px;stroke:var(--border-strong);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:0.7;}
+.preview-empty p{font-size:13px;max-width:220px;line-height:1.6;}
+.preview-loading{display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted);font-size:13px;position:absolute;inset:0;background:var(--bg);z-index:10;}
+.preview-loading.show{display:flex;}
+.preview-loading .spinner{width:32px;height:32px;}
+.preview-progress{font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;}
+.pdf-frame{width:100%;height:100%;border:none;display:none;background:#fff;}
+.pdf-frame.show{display:block;}
+.preview-error{display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--danger);font-size:13px;text-align:center;padding:40px;position:absolute;inset:0;}
+.preview-error.show{display:flex;}
+.preview-error svg{width:36px;height:36px;stroke:var(--danger);fill:none;stroke-width:1.5;opacity:0.7;}
+.stats-bar{height:34px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:18px;font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
+.stats-bar span{display:flex;align-items:center;gap:4px;}
+.stats-bar svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+@media(max-width:680px){.main{flex-direction:column;height:auto;}.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}.file-list{max-height:300px;}.preview{height:55vh;}.topbar{padding:0 14px;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <div class="topbar-title">Rapoarte SSM</div>
+      <div class="topbar-sub">Bază de date centralizată</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot loading" id="statusDot"></div>
+      <span id="statusLabel">Se conectează...</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" id="searchInput" placeholder="Caută după număr, localitate, dată..." oninput="filterFiles()"/>
+      </div>
+      <div class="toolbar-row">
+        <select class="sort-select" id="sortSelect" onchange="filterFiles()">
+          <option value="newest">Cele mai noi întâi</option>
+          <option value="oldest">Cele mai vechi întâi</option>
+          <option value="name">Alfabetic</option>
+        </select>
+        <span class="count-badge" id="countBadge">— rapoarte</span>
+      </div>
+    </div>
+    <div class="file-list" id="fileList">
+      <div class="state-msg"><div class="spinner"></div><span>Se încarcă rapoartele...</span></div>
+    </div>
+  </div>
+
+  <div class="preview">
+    <div class="preview-toolbar">
+      <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
+      <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descarcă
+      </button>
+      <button class="btn btn-primary" id="btnPreview" disabled onclick="previewCurrent()">
+        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Previzualizează
+      </button>
+    </div>
+    <div class="preview-body">
+      <div class="preview-empty" id="previewEmpty">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <p>Selectează un raport și apasă <strong>Previzualizează</strong> pentru a-l deschide aici.</p>
+      </div>
+      <div class="preview-loading" id="previewLoading">
+        <div class="spinner"></div>
+        <span>Se încarcă PDF-ul...</span>
+        <span class="preview-progress" id="previewProgress"></span>
+      </div>
+      <div class="preview-error" id="previewError">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="previewErrorMsg">Eroare la încărcarea PDF-ului.</span>
+        <button class="btn" onclick="previewCurrent()">Încearcă din nou</button>
+      </div>
+      <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare PDF"></iframe>
+    </div>
+    <div class="stats-bar" id="statsBar" style="display:none;">
+      <span>
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="statName">—</span>
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="statDate">—</span>
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="statLocation">—</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'LINKUL_TAU_GAS';
+
+let allFiles=[], currentFile=null, currentBlob=null;
+
+(async function init(){
+  setStatus('loading','Se conectează...');
+  try{
+    const res=await fetch(GAS_URL+'?action=rapoarte');
+    const data=await res.json();
+    if(data.status!=='success') throw new Error(data.message||'Eroare server');
+    allFiles=data.files||[];
+    setStatus('ok',allFiles.length+' rapoarte');
+    document.getElementById('countBadge').textContent=allFiles.length+' rapoarte';
+    filterFiles();
+  }catch(e){
+    setStatus('error','Eroare conexiune');
+    document.getElementById('fileList').innerHTML='<div class="state-msg"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style="color:#c0392b">Nu s-au putut încărca rapoartele.<br>Verifică conexiunea sau GAS-ul.</span></div>';
+  }
+})();
+
+function setStatus(type,label){
+  const dot=document.getElementById('statusDot');
+  dot.className='status-dot'+(type==='loading'?' loading':type==='error'?' error':'');
+  document.getElementById('statusLabel').textContent=label;
+}
+
+function isNew(d){if(!d)return false;return(new Date()-new Date(d))<14*24*60*60*1000;}
+function formatDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
+
+function filterFiles(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const sort=document.getElementById('sortSelect').value;
+  let list=allFiles.filter(f=>
+    (f.name||'').toLowerCase().includes(q)||
+    (f.location||'').toLowerCase().includes(q)||
+    (f.nr||'').toLowerCase().includes(q)||
+    (f.date||'').includes(q)
+  );
+  if(sort==='newest') list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  else if(sort==='oldest') list.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  else list.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('countBadge').textContent=list.length+' / '+allFiles.length+' rapoarte';
+  renderList(list);
+}
+
+function renderList(files){
+  const el=document.getElementById('fileList');
+  if(!files.length){
+    el.innerHTML='<div class="state-msg"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Niciun raport găsit.</span></div>';
+    return;
+  }
+  el.innerHTML=files.map(f=>`
+    <div class="file-item ${currentFile&&currentFile.name===f.name?'active':''}" onclick="selectFile(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-meta">
+          <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDate(f.date)}</span>
+          ${f.location?`<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${f.location}</span>`:''}
+        </div>
+      </div>
+      ${isNew(f.date)?'<span class="badge-new">Nou</span>':''}
+    </div>`).join('');
+}
+
+function selectFile(f){
+  currentFile=f; currentBlob=null;
+  showPreviewState('empty');
+  document.getElementById('pdfFrame').className='pdf-frame';
+  document.getElementById('pdfFrame').src='';
+  document.getElementById('previewFilename').textContent=f.name;
+  document.getElementById('previewFilename').className='preview-filename';
+  document.getElementById('btnDownload').disabled=false;
+  document.getElementById('btnPreview').disabled=false;
+  document.getElementById('statName').textContent=f.nr||f.name;
+  document.getElementById('statDate').textContent=formatDate(f.date);
+  document.getElementById('statLocation').textContent=f.location||'—';
+  document.getElementById('statsBar').style.display='flex';
+  filterFiles();
+}
+
+function showPreviewState(state){
+  document.getElementById('previewEmpty').style.display=state==='empty'?'flex':'none';
+  document.getElementById('previewLoading').className='preview-loading'+(state==='loading'?' show':'');
+  document.getElementById('previewError').className='preview-error'+(state==='error'?' show':'');
+}
+
+async function previewCurrent(){
+  if(!currentFile) return;
+  if(currentBlob){showPdfBlob(currentBlob);return;}
+  showPreviewState('loading');
+  document.getElementById('pdfFrame').className='pdf-frame';
+  document.getElementById('previewProgress').textContent=currentFile.name;
+  try{
+    const url=GAS_URL+'?action=pdf&filename='+encodeURIComponent(currentFile.name);
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data.status!=='success') throw new Error(data.message||'Eroare server');
+    const binary=atob(data.base64);
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+    currentBlob=new Blob([bytes],{type:'application/pdf'});
+    showPdfBlob(currentBlob);
+  }catch(e){
+    showPreviewState('error');
+    document.getElementById('previewErrorMsg').textContent='Eroare: '+(e.message||'necunoscută');
+  }
+}
+
+function showPdfBlob(blob){
+  const objUrl=URL.createObjectURL(blob);
+  const frame=document.getElementById('pdfFrame');
+  frame.src=objUrl;
+  frame.className='pdf-frame show';
+  showPreviewState(null);
+}
+
+function downloadCurrent(){
+  if(!currentFile) return;
+  if(currentBlob){
+    const a=document.createElement('a');a.href=URL.createObjectURL(currentBlob);a.download=currentFile.name;a.click();
+  } else {
+    previewCurrent().then(()=>{
+      if(currentBlob){const a=document.createElement('a');a.href=URL.createObjectURL(currentBlob);a.download=currentFile.name;a.click();}
+    });
+  }
+}
+</script>
+</body>
+</html>
