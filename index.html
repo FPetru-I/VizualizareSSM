@@ -16,57 +16,25 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
 
-/* ── LOGIN SCREEN ── */
-#loginScreen{
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;background:var(--bg);
-}
-.login-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:40px 36px;width:100%;max-width:360px;
-  box-shadow:0 4px 24px rgba(0,0,0,0.08);
-}
-.login-logo{
-  display:flex;align-items:center;gap:12px;margin-bottom:28px;
-}
-.login-logo-icon{
-  width:40px;height:40px;background:var(--accent);border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-}
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;}
 .login-logo-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .login-title{font-size:18px;font-weight:600;color:var(--text);}
 .login-sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
 .login-label{display:block;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
-.login-input{
-  width:100%;padding:10px 12px;border:1px solid var(--border);
-  border-radius:var(--radius);background:var(--surface2);
-  font-family:inherit;font-size:14px;color:var(--text);outline:none;
-  transition:border-color 0.15s;
-}
+.login-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color 0.15s;}
 .login-input:focus{border-color:var(--accent);}
-.login-btn{
-  width:100%;margin-top:16px;padding:11px;
-  background:var(--accent);border:none;border-radius:var(--radius);
-  color:#fff;font-family:inherit;font-size:14px;font-weight:500;
-  cursor:pointer;transition:background 0.15s;
-}
+.login-btn{width:100%;margin-top:16px;padding:11px;background:var(--accent);border:none;border-radius:var(--radius);color:#fff;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background 0.15s;}
 .login-btn:hover{background:var(--accent-dark);}
 .login-btn:disabled{opacity:0.6;cursor:not-allowed;}
-.login-error{
-  margin-top:12px;padding:10px 12px;background:#fef2f2;
-  border:1px solid #fecaca;border-radius:var(--radius);
-  font-size:13px;color:var(--danger);display:none;
-}
+.login-error{margin-top:12px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius);font-size:13px;color:var(--danger);display:none;}
 
-/* ── APP SCREEN ── */
+/* ── APP ── */
 #appScreen{display:none;flex-direction:column;height:100vh;}
-
-/* ── TOPBAR ── */
-.topbar{
-  background:var(--accent);color:#fff;padding:0 24px;height:52px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.15);
-}
+.topbar{background:var(--accent);color:#fff;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
 .topbar-left{display:flex;align-items:center;gap:10px;}
 .topbar-icon{width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:7px;display:flex;align-items:center;justify-content:center;}
 .topbar-icon svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -78,18 +46,22 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .status-dot.loading{background:#fbbf24;animation:pulse 1s infinite;}
 .status-dot.error{background:#f87171;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.logout-btn{
-  display:flex;align-items:center;gap:5px;
-  padding:5px 12px;border-radius:var(--radius);
-  border:1px solid rgba(255,255,255,0.3);background:transparent;
-  color:#fff;font-family:inherit;font-size:12px;cursor:pointer;
-  transition:background 0.1s;
-}
+.logout-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.3);background:transparent;color:#fff;font-family:inherit;font-size:12px;cursor:pointer;transition:background 0.1s;}
 .logout-btn:hover{background:rgba(255,255,255,0.1);}
 .logout-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
+/* ── TABS ── */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;display:flex;align-items:center;gap:6px;margin-bottom:-1px;}
+.tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-content{display:none;flex:1;overflow:hidden;}
+.tab-content.active{display:flex;}
+
 /* ── MAIN LAYOUT ── */
-.main{display:flex;flex:1;overflow:hidden;}
+.main{display:flex;flex:1;overflow:hidden;flex-direction:column;}
+.rapoarte-layout{display:flex;flex:1;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
@@ -104,9 +76,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .file-list{flex:1;overflow-y:auto;padding:8px;}
 .file-list::-webkit-scrollbar{width:3px;}
 .file-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);cursor:pointer;transition:background 0.1s,border-color 0.1s;border:1px solid transparent;margin-bottom:3px;}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);cursor:pointer;transition:background 0.1s,border-color 0.1s;border:1px solid transparent;margin-bottom:3px;position:relative;}
 .file-item:hover{background:var(--accent-light);border-color:#c8d8ef;}
 .file-item.active{background:var(--accent-light);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+.file-item.prefetching::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);opacity:0.4;border-radius:0 0 var(--radius) var(--radius);}
 .file-icon{width:32px;height:32px;border-radius:7px;background:#e8eef7;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .file-icon svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .file-item.active .file-icon{background:var(--accent);}
@@ -149,10 +122,31 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .stats-bar span{display:flex;align-items:center;gap:4px;}
 .stats-bar svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
+/* ── CSV TAB ── */
+.csv-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.csv-toolbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.csv-search{flex:1;padding:7px 10px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
+.csv-search:focus{border-color:var(--accent);}
+.csv-table-wrap{flex:1;overflow:auto;}
+.csv-table-wrap::-webkit-scrollbar{width:4px;height:4px;}
+.csv-table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.csv-table{width:100%;border-collapse:collapse;font-size:12px;}
+.csv-table th{background:var(--surface2);border:1px solid var(--border);padding:6px 10px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+.csv-table th:hover{background:var(--accent-light);color:var(--accent);}
+.csv-table th.sort-asc::after{content:' ↑';}
+.csv-table th.sort-desc::after{content:' ↓';}
+.csv-table td{border:1px solid var(--border);padding:6px 10px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.csv-table tr:nth-child(even) td{background:var(--surface2);}
+.csv-table tr:hover td{background:var(--accent-light);}
+.csv-status{padding:12px 16px;font-size:12px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.badge-da{background:var(--yes-bg);color:var(--yes);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-nu{background:#fef2f2;color:var(--danger);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-na{background:#f0f4f8;color:#5a7a9e;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
+
 @media(max-width:680px){
-  .main{flex-direction:column;}
+  .rapoarte-layout{flex-direction:column;}
   .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}
-  .file-list{max-height:280px;}
+  .file-list{max-height:260px;}
   .preview{height:50vh;}
   .topbar{padding:0 14px;}
 }
@@ -160,44 +154,29 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 </head>
 <body>
 
-<!-- ── LOGIN SCREEN ── -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <div>
-        <div class="login-title">Rapoarte SSM</div>
-        <div class="login-sub">Bază de date centralizată</div>
-      </div>
+      <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div><div class="login-title">Rapoarte SSM</div><div class="login-sub">Bază de date centralizată</div></div>
     </div>
     <label class="login-label" for="passwordInput">Parolă de acces</label>
-    <input class="login-input" type="password" id="passwordInput"
-      placeholder="Introduceți parola..."
-      onkeydown="if(event.key==='Enter') doLogin()"/>
+    <input class="login-input" type="password" id="passwordInput" placeholder="Introduceți parola..." onkeydown="if(event.key==='Enter') doLogin()"/>
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Intră</button>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- ── APP SCREEN ── -->
+<!-- APP -->
 <div id="appScreen">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <div>
-        <div class="topbar-title">Rapoarte SSM</div>
-        <div class="topbar-sub">Bază de date centralizată</div>
-      </div>
+      <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div><div class="topbar-title">Rapoarte SSM</div><div class="topbar-sub">Bază de date centralizată</div></div>
     </div>
     <div class="topbar-right">
-      <div class="status-pill">
-        <div class="status-dot loading" id="statusDot"></div>
-        <span id="statusLabel">Se conectează...</span>
-      </div>
+      <div class="status-pill"><div class="status-dot loading" id="statusDot"></div><span id="statusLabel">Se conectează...</span></div>
       <button class="logout-btn" onclick="doLogout()">
         <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Ieși
@@ -205,77 +184,99 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-rapoarte" onclick="switchTab('rapoarte')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Rapoarte PDF
+    </div>
+    <div class="tab" id="tab-csv" onclick="switchTab('csv')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      Centralizator CSV
+    </div>
+  </div>
+
   <div class="main">
-    <div class="sidebar">
-      <div class="sidebar-toolbar">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" type="text" id="searchInput"
-            placeholder="Caută după număr, localitate, dată..."
-            oninput="filterFiles()"/>
+    <!-- TAB: RAPOARTE -->
+    <div class="tab-content active rapoarte-layout" id="content-rapoarte">
+      <div class="sidebar">
+        <div class="sidebar-toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" type="text" id="searchInput" placeholder="Caută după număr, localitate, dată..." oninput="filterFiles()"/>
+          </div>
+          <div class="toolbar-row">
+            <select class="sort-select" id="sortSelect" onchange="filterFiles()">
+              <option value="newest">Cele mai noi întâi</option>
+              <option value="oldest">Cele mai vechi întâi</option>
+              <option value="name">Alfabetic</option>
+            </select>
+            <span class="count-badge" id="countBadge">— rapoarte</span>
+          </div>
         </div>
-        <div class="toolbar-row">
-          <select class="sort-select" id="sortSelect" onchange="filterFiles()">
-            <option value="newest">Cele mai noi întâi</option>
-            <option value="oldest">Cele mai vechi întâi</option>
-            <option value="name">Alfabetic</option>
-          </select>
-          <span class="count-badge" id="countBadge">— rapoarte</span>
+        <div class="file-list" id="fileList">
+          <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
         </div>
       </div>
-      <div class="file-list" id="fileList">
-        <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
+      <div class="preview">
+        <div class="preview-toolbar">
+          <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
+          <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descarcă
+          </button>
+        </div>
+        <div class="preview-body">
+          <div class="preview-empty" id="previewEmpty">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <p>Selectează un raport din listă pentru a-l vizualiza.</p>
+          </div>
+          <div class="preview-loading" id="previewLoading">
+            <div class="spinner"></div><span>Se încarcă PDF-ul...</span>
+            <span class="preview-progress" id="previewProgress"></span>
+          </div>
+          <div class="preview-error" id="previewError">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="previewErrorMsg">Eroare la încărcarea PDF-ului.</span>
+            <button class="btn" onclick="previewCurrent()">Încearcă din nou</button>
+          </div>
+          <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare PDF"></iframe>
+        </div>
+        <div class="stats-bar" id="statsBar" style="display:none;">
+          <span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span id="statName">—</span></span>
+          <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="statDate">—</span></span>
+          <span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="statLocation">—</span></span>
+        </div>
       </div>
     </div>
 
-    <div class="preview">
-      <div class="preview-toolbar">
-        <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
-        <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Descarcă
-        </button>
-      </div>
-      <div class="preview-body">
-        <div class="preview-empty" id="previewEmpty">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <p>Selectează un raport din listă pentru a-l vizualiza.</p>
+    <!-- TAB: CSV -->
+    <div class="tab-content" id="content-csv">
+      <div class="csv-panel">
+        <div class="csv-toolbar">
+          <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." oninput="filterCsv()"/>
+          <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Reîncarcă
+          </button>
+          <span class="count-badge" id="csvCountBadge"></span>
         </div>
-        <div class="preview-loading" id="previewLoading">
-          <div class="spinner"></div>
-          <span>Se încarcă PDF-ul...</span>
-          <span class="preview-progress" id="previewProgress"></span>
+        <div class="csv-table-wrap" id="csvTableWrap">
+          <div class="state-msg"><span style="color:var(--text-faint)">Apasă tab-ul pentru a încărca datele.</span></div>
         </div>
-        <div class="preview-error" id="previewError">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="previewErrorMsg">Eroare la încărcarea PDF-ului.</span>
-          <button class="btn" onclick="previewCurrent()">Încearcă din nou</button>
-        </div>
-        <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare PDF"></iframe>
-      </div>
-      <div class="stats-bar" id="statsBar" style="display:none;">
-        <span>
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span id="statName">—</span>
-        </span>
-        <span>
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span id="statDate">—</span>
-        </span>
-        <span>
-          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span id="statLocation">—</span>
-        </span>
+        <div class="csv-status" id="csvStatus"></div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── CONFIGURARE — înlocuiește cu URL-ul tău GAS ──
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvMeWWQUgxFSGoEqqt8DSCfBymOuqpF67fZUlsj7FWduxALSVnfZX0HGN8Zik_pTKO/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzd30HUrNXbougYEXGLoZWTpH9errm3PGcnu07la7yY1wF0o8c6NTzWnp4WIXChMSsAlQ/exec';
 
 let allFiles=[], currentFile=null, currentBlob=null, sessionToken=null;
+// ── Cache localStorage pentru PDF-uri ──
+const LS_PREFIX = 'ssm_pdf_';
+const LS_MAX_MB = 4; // max MB pentru cache total
 
 // ── INIT ──
 (function init(){
@@ -289,56 +290,61 @@ function showLogin(){
   document.getElementById('appScreen').style.display='none';
   setTimeout(()=>document.getElementById('passwordInput').focus(), 100);
 }
-
 function showApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='flex';
 }
 
 async function doLogin(){
-  const pw  = document.getElementById('passwordInput').value;
-  const btn = document.getElementById('loginBtn');
-  const err = document.getElementById('loginError');
+  const pw=document.getElementById('passwordInput').value;
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginError');
   if(!pw) return;
   btn.disabled=true; btn.textContent='Se verifică...'; err.style.display='none';
   try{
-    const res  = await fetch(GAS_URL+'?action=login&password='+encodeURIComponent(pw));
-    const data = await res.json();
+    const res=await fetch(GAS_URL+'?action=login&password='+encodeURIComponent(pw));
+    const data=await res.json();
     if(data.status==='success'){
       sessionToken=data.token;
-      sessionStorage.setItem('ssm_token', sessionToken);
-      showApp();
-      loadRapoarte();
+      sessionStorage.setItem('ssm_token',sessionToken);
+      showApp(); loadRapoarte();
     } else {
       err.textContent=data.message||'Parolă incorectă.';
       err.style.display='block';
       document.getElementById('passwordInput').value='';
       document.getElementById('passwordInput').focus();
     }
-  }catch(e){
-    err.textContent='Eroare conexiune.';
-    err.style.display='block';
-  }
+  }catch(e){ err.textContent='Eroare conexiune.'; err.style.display='block'; }
   btn.disabled=false; btn.textContent='Intră';
 }
 
 function doLogout(){
   sessionStorage.removeItem('ssm_token');
   sessionToken=null; allFiles=[]; currentFile=null; currentBlob=null;
-  document.getElementById('fileList').innerHTML='<div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>';
   document.getElementById('passwordInput').value='';
   showLogin();
 }
 
+// ── TABS ──
+let csvLoaded = false;
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('content-'+tab).classList.add('active');
+  if(tab==='csv' && !csvLoaded){ loadCsv(); }
+}
+
+// ── RAPOARTE ──
 async function loadRapoarte(){
   setStatus('loading','Se conectează...');
   try{
-    const res  = await fetch(GAS_URL+'?action=rapoarte&token='+encodeURIComponent(sessionToken));
-    const data = await res.json();
+    const res=await fetch(GAS_URL+'?action=rapoarte&token='+encodeURIComponent(sessionToken));
+    const data=await res.json();
     if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return; }
     if(data.status!=='success') throw new Error(data.message||'Eroare server');
     allFiles=data.files||[];
-    setStatus('ok', allFiles.length+' rapoarte');
+    setStatus('ok',allFiles.length+' rapoarte');
     document.getElementById('countBadge').textContent=allFiles.length+' rapoarte';
     filterFiles();
   }catch(e){
@@ -378,18 +384,22 @@ function renderList(files){
     el.innerHTML='<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Niciun raport găsit.</span></div>';
     return;
   }
-  el.innerHTML=files.map(f=>`
-    <div class="file-item ${currentFile&&currentFile.name===f.name?'active':''}" onclick="selectFile(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+  el.innerHTML=files.map(f=>{
+    const cached = isCached(f.name);
+    return `<div class="file-item ${currentFile&&currentFile.name===f.name?'active':''}"
+      onclick="selectFile(${JSON.stringify(f).replace(/"/g,'&quot;')})"
+      onmouseenter="prefetchOnHover('${f.name.replace(/'/g,"\\'")}')">
       <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div class="file-info">
-        <div class="file-name">${f.name}</div>
+        <div class="file-name">${f.name}${cached?' <span style="font-size:9px;color:var(--yes);font-family:inherit;">●</span>':''}</div>
         <div class="file-meta">
           <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDate(f.date)}</span>
           ${f.location?`<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${f.location}</span>`:''}
         </div>
       </div>
       ${isNew(f.date)?'<span class="badge-new">Nou</span>':''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectFile(f){
@@ -402,7 +412,6 @@ function selectFile(f){
   document.getElementById('statLocation').textContent=f.location||'—';
   document.getElementById('statsBar').style.display='flex';
   filterFiles();
-  // ── Preview automat ──
   previewCurrent();
 }
 
@@ -412,23 +421,107 @@ function showPreviewState(state){
   document.getElementById('previewError').className='preview-error'+(state==='error'?' show':'');
 }
 
+// ── CACHE localStorage ──
+function getCacheKey(filename){ return LS_PREFIX + filename; }
+
+function isCached(filename){
+  try{ return !!localStorage.getItem(getCacheKey(filename)); }
+  catch(e){ return false; }
+}
+
+function saveToCache(filename, base64){
+  try{
+    // Verificăm spațiu disponibil — ștergem cele mai vechi dacă depășim limita
+    const key = getCacheKey(filename);
+    const sizeMB = (base64.length * 0.75) / (1024 * 1024);
+    // Calculăm totalul curent
+    let totalMB = 0;
+    const keys = [];
+    for(let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(k.startsWith(LS_PREFIX)){
+        const v = localStorage.getItem(k);
+        totalMB += (v.length * 0.75) / (1024 * 1024);
+        keys.push({k, size: (v.length * 0.75) / (1024 * 1024)});
+      }
+    }
+    // Dacă depășim limita, ștergem cele mai vechi
+    while(totalMB + sizeMB > LS_MAX_MB && keys.length > 0){
+      const oldest = keys.shift();
+      localStorage.removeItem(oldest.k);
+      totalMB -= oldest.size;
+    }
+    localStorage.setItem(key, base64);
+  }catch(e){ /* localStorage plin — ignorăm */ }
+}
+
+function loadFromCache(filename){
+  try{ return localStorage.getItem(getCacheKey(filename)); }
+  catch(e){ return null; }
+}
+
+function base64ToBlob(base64){
+  const binary = atob(base64);
+  const bytes  = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  return new Blob([bytes],{type:'application/pdf'});
+}
+
+// ── PREFETCH LA HOVER ──
+let prefetchTimer = null;
+let prefetching   = new Set();
+
+function prefetchOnHover(filename){
+  if(isCached(filename) || prefetching.has(filename)) return;
+  clearTimeout(prefetchTimer);
+  prefetchTimer = setTimeout(()=>{
+    if(!isCached(filename) && !prefetching.has(filename)){
+      prefetching.add(filename);
+      fetchPDF(filename).then(base64=>{
+        if(base64){
+          saveToCache(filename, base64);
+          prefetching.delete(filename);
+          filterFiles(); // refresh lista să arate indicatorul ●
+        }
+      }).catch(()=>{ prefetching.delete(filename); });
+    }
+  }, 300); // 300ms delay — nu prefetch dacă utilizatorul trece rapid
+}
+
+async function fetchPDF(filename){
+  const url = GAS_URL+'?action=pdf&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
+  const res  = await fetch(url);
+  const data = await res.json();
+  if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return null; }
+  if(data.status!=='success') return null;
+  return data.base64;
+}
+
 async function previewCurrent(){
   if(!currentFile) return;
-  if(currentBlob){showPdfBlob(currentBlob);return;}
+
+  // 1. Verifica cache in-memory
+  if(currentBlob){ showPdfBlob(currentBlob); return; }
+
+  // 2. Verifica cache localStorage
+  const cached = loadFromCache(currentFile.name);
+  if(cached){
+    currentBlob = base64ToBlob(cached);
+    showPdfBlob(currentBlob);
+    return;
+  }
+
+  // 3. Descarca de la GAS
   showPreviewState('loading');
   document.getElementById('pdfFrame').className='pdf-frame';
   document.getElementById('previewProgress').textContent=currentFile.name;
   try{
-    const url=GAS_URL+'?action=pdf&filename='+encodeURIComponent(currentFile.name)+'&token='+encodeURIComponent(sessionToken);
-    const res=await fetch(url);
-    const data=await res.json();
-    if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return; }
-    if(data.status!=='success') throw new Error(data.message||'Eroare server');
-    const binary=atob(data.base64);
-    const bytes=new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-    currentBlob=new Blob([bytes],{type:'application/pdf'});
+    const base64 = await fetchPDF(currentFile.name);
+    if(!base64) throw new Error('Fișier indisponibil');
+    saveToCache(currentFile.name, base64);
+    currentBlob = base64ToBlob(base64);
     showPdfBlob(currentBlob);
+    filterFiles(); // refresh pentru indicatorul ●
   }catch(e){
     showPreviewState('error');
     document.getElementById('previewErrorMsg').textContent='Eroare: '+(e.message||'necunoscută');
@@ -452,6 +545,104 @@ function downloadCurrent(){
       if(currentBlob){const a=document.createElement('a');a.href=URL.createObjectURL(currentBlob);a.download=currentFile.name;a.click();}
     });
   }
+}
+
+// ── CSV ──
+let csvData=[], csvHeaders=[], csvSortCol=-1, csvSortDir=1;
+
+async function loadCsv(){
+  const wrap=document.getElementById('csvTableWrap');
+  const status=document.getElementById('csvStatus');
+  wrap.innerHTML='<div class="state-msg"><div class="spinner"></div><span>Se încarcă centralizatorul...</span></div>';
+  status.textContent='';
+  document.getElementById('csvCountBadge').textContent='';
+  try{
+    const res=await fetch(GAS_URL+'?action=csv&token='+encodeURIComponent(sessionToken));
+    const data=await res.json();
+    if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return; }
+    if(data.status!=='success') throw new Error(data.message||'Eroare server');
+    // Parsam CSV
+    const rows = parseCSV(data.csv);
+    if(rows.length < 2){
+      wrap.innerHTML='<div class="state-msg"><span>Centralizatorul e gol.</span></div>';
+      return;
+    }
+    csvHeaders = rows[0];
+    csvData    = rows.slice(1);
+    csvLoaded  = true;
+    renderCsv(csvData);
+    status.textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
+    document.getElementById('csvCountBadge').textContent=csvData.length+' rânduri';
+  }catch(e){
+    wrap.innerHTML='<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: '+(e.message||'necunoscută')+'</span></div>';
+  }
+}
+
+function parseCSV(text){
+  const rows=[];
+  const lines=text.split('\n');
+  for(const line of lines){
+    if(!line.trim()) continue;
+    const cols=[];
+    let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ if(inQ&&line[i+1]==='"'){ cur+='"'; i++; } else { inQ=!inQ; } }
+      else if(c===','&&!inQ){ cols.push(cur); cur=''; }
+      else { cur+=c; }
+    }
+    cols.push(cur);
+    rows.push(cols);
+  }
+  return rows;
+}
+
+function filterCsv(){
+  const q=document.getElementById('csvSearch').value.toLowerCase();
+  const filtered=q?csvData.filter(row=>row.some(cell=>(cell||'').toLowerCase().includes(q))):csvData;
+  renderCsv(filtered);
+  document.getElementById('csvCountBadge').textContent=filtered.length+' / '+csvData.length+' rânduri';
+}
+
+function renderCsv(rows){
+  const wrap=document.getElementById('csvTableWrap');
+  if(!rows.length){
+    wrap.innerHTML='<div class="state-msg"><span>Niciun rezultat.</span></div>';
+    return;
+  }
+  // Afișăm primele 20 coloane pentru lizibilitate + scroll orizontal
+  const cols = csvHeaders;
+  let html='<table class="csv-table"><thead><tr>';
+  cols.forEach((h,i)=>{
+    const cls=csvSortCol===i?(csvSortDir===1?'sort-asc':'sort-desc'):'';
+    html+=`<th class="${cls}" onclick="sortCsv(${i})">${h}</th>`;
+  });
+  html+='</tr></thead><tbody>';
+  rows.forEach(row=>{
+    html+='<tr>';
+    cols.forEach((_,i)=>{
+      const val=row[i]||'';
+      let display=val;
+      if(val==='DA') display='<span class="badge-da">DA</span>';
+      else if(val==='NU') display='<span class="badge-nu">NU</span>';
+      else if(val==='N/A') display='<span class="badge-na">N/A</span>';
+      html+=`<td title="${val.replace(/"/g,'&quot;')}">${display}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function sortCsv(colIdx){
+  if(csvSortCol===colIdx){ csvSortDir*=-1; } else { csvSortCol=colIdx; csvSortDir=1; }
+  const q=document.getElementById('csvSearch').value.toLowerCase();
+  let rows=q?csvData.filter(row=>row.some(cell=>(cell||'').toLowerCase().includes(q))):csvData;
+  rows=[...rows].sort((a,b)=>{
+    const av=a[colIdx]||'', bv=b[colIdx]||'';
+    return av.localeCompare(bv,undefined,{numeric:true})*csvSortDir;
+  });
+  renderCsv(rows);
 }
 </script>
 </body>
