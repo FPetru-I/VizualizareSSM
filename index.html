@@ -143,6 +143,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .badge-nu{background:#fef2f2;color:var(--danger);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 .badge-na{background:#f0f4f8;color:#5a7a9e;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 
+
+/* ── PROGRESS BAR PDF ── */
+.pdf-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
+.pdf-progress-fill{height:100%;background:var(--accent);width:0%;transition:width 0.2s ease;border-radius:2px;}
+.pdf-progress-pct{font-size:12px;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
 @media(max-width:680px){
   .rapoarte-layout{flex-direction:column;}
   .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}
@@ -232,7 +238,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             <p>Selectează un raport din listă pentru a-l vizualiza.</p>
           </div>
           <div class="preview-loading" id="previewLoading">
-            <div class="spinner"></div><span>Se încarcă PDF-ul...</span>
+            <div class="spinner"></div>
+            <span>Se încarcă PDF-ul...</span>
+            <span class="pdf-progress-pct" id="previewProgressPct"></span>
+            <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="progressFill"></div></div>
             <span class="preview-progress" id="previewProgress"></span>
           </div>
           <div class="preview-error" id="previewError">
@@ -258,6 +267,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
             <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             Reîncarcă
+          </button>
+          <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv()" disabled>
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
           </button>
           <span class="count-badge" id="csvCountBadge"></span>
         </div>
@@ -477,7 +490,7 @@ function prefetchOnHover(filename){
   prefetchTimer = setTimeout(()=>{
     if(!isCached(filename) && !prefetching.has(filename)){
       prefetching.add(filename);
-      fetchPDF(filename).then(base64=>{
+      fetchPDF(filename, null).then(base64=>{
         if(base64){
           saveToCache(filename, base64);
           prefetching.delete(filename);
@@ -488,12 +501,42 @@ function prefetchOnHover(filename){
   }, 300); // 300ms delay — nu prefetch dacă utilizatorul trece rapid
 }
 
-async function fetchPDF(filename){
+async function fetchPDF(filename, onProgress){
   const url = GAS_URL+'?action=pdf&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
   const res  = await fetch(url);
-  const data = await res.json();
+  if(!res.ok) return null;
+
+  // Progres real via ReadableStream
+  const contentLength = res.headers.get('Content-Length');
+  const total = contentLength ? parseInt(contentLength) : 0;
+  const reader = res.body.getReader();
+  const chunks = [];
+  let received = 0;
+
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    chunks.push(value);
+    received += value.length;
+    if(onProgress && total > 0){
+      onProgress(Math.round((received / total) * 100));
+    } else if(onProgress) {
+      // Fără Content-Length — simulăm progres bazat pe bytes primiți
+      onProgress(Math.min(90, Math.round(received / 8000)));
+    }
+  }
+
+  // Asamblăm răspunsul
+  const allChunks = new Uint8Array(received);
+  let pos = 0;
+  for(const chunk of chunks){ allChunks.set(chunk, pos); pos += chunk.length; }
+  const text = new TextDecoder().decode(allChunks);
+
+  let data;
+  try{ data = JSON.parse(text); } catch(e){ return null; }
   if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return null; }
   if(data.status!=='success') return null;
+  if(onProgress) onProgress(100);
   return data.base64;
 }
 
@@ -511,12 +554,17 @@ async function previewCurrent(){
     return;
   }
 
-  // 3. Descarca de la GAS
+  // 3. Descarca de la GAS cu progress
   showPreviewState('loading');
   document.getElementById('pdfFrame').className='pdf-frame';
   document.getElementById('previewProgress').textContent=currentFile.name;
+  document.getElementById('previewProgressPct').textContent='0%';
+  document.getElementById('progressFill').style.width='0%';
   try{
-    const base64 = await fetchPDF(currentFile.name);
+    const base64 = await fetchPDF(currentFile.name, (pct)=>{
+      document.getElementById('previewProgressPct').textContent=pct+'%';
+      document.getElementById('progressFill').style.width=pct+'%';
+    });
     if(!base64) throw new Error('Fișier indisponibil');
     saveToCache(currentFile.name, base64);
     currentBlob = base64ToBlob(base64);
@@ -573,6 +621,7 @@ async function loadCsv(){
     renderCsv(csvData);
     status.textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
     document.getElementById('csvCountBadge').textContent=csvData.length+' rânduri';
+    document.getElementById('btnExportCsv').disabled=false;
   }catch(e){
     wrap.innerHTML='<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: '+(e.message||'necunoscută')+'</span></div>';
   }
@@ -643,6 +692,23 @@ function sortCsv(colIdx){
     return av.localeCompare(bv,undefined,{numeric:true})*csvSortDir;
   });
   renderCsv(rows);
+}
+
+function exportCsv(){
+  if(!csvHeaders.length || !csvData.length) return;
+  // Reconstruim CSV cu toate datele (nu cele filtrate)
+  function escVal(v){
+    const s = String(v||'').replace(/"/g,'""');
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"'+s+'"' : s;
+  }
+  const lines = [csvHeaders.map(escVal).join(',')];
+  csvData.forEach(row => lines.push(row.map(escVal).join(',')));
+  const csvText = lines.join('\n');
+  const blob = new Blob(['﻿'+csvText], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'centralizator_SSM_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
 }
 </script>
 </body>
