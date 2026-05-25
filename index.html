@@ -556,21 +556,34 @@ async function previewCurrent(){
 
   // 3. Descarca de la GAS cu progress
   showPreviewState('loading');
-  document.getElementById('pdfFrame').className='pdf-frame';
   document.getElementById('previewProgress').textContent=currentFile.name;
   document.getElementById('previewProgressPct').textContent='0%';
   document.getElementById('progressFill').style.width='0%';
+
+  // Animație progres simulat — avansează lin până la 85% în ~8s
+  let simPct = 0;
+  const simInterval = setInterval(()=>{
+    const remaining = 85 - simPct;
+    simPct += remaining * 0.08;
+    const pct = Math.round(simPct);
+    document.getElementById('previewProgressPct').textContent=pct+'%';
+    document.getElementById('progressFill').style.width=pct+'%';
+  }, 200);
+
   try{
-    const base64 = await fetchPDF(currentFile.name, (pct)=>{
-      document.getElementById('previewProgressPct').textContent=pct+'%';
-      document.getElementById('progressFill').style.width=pct+'%';
-    });
+    const base64 = await fetchPDF(currentFile.name, null);
+    clearInterval(simInterval);
+    document.getElementById('previewProgressPct').textContent='100%';
+    document.getElementById('progressFill').style.width='100%';
+    
     if(!base64) throw new Error('Fișier indisponibil');
     saveToCache(currentFile.name, base64);
     currentBlob = base64ToBlob(base64);
     showPdfBlob(currentBlob);
     filterFiles(); // refresh pentru indicatorul ●
   }catch(e){
+    clearInterval(simInterval);
+    showPreviewState('error');
     showPreviewState('error');
     document.getElementById('previewErrorMsg').textContent='Eroare: '+(e.message||'necunoscută');
   }
