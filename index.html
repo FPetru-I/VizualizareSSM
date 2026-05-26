@@ -56,12 +56,32 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-content{display:none;flex:1;overflow:hidden;}
+.tab-content{display:none;flex:1;overflow:hidden;flex-direction:column;position:relative;}
 .tab-content.active{display:flex;}
 
 /* ── MAIN LAYOUT ── */
-.main{display:flex;flex:1;overflow:hidden;flex-direction:column;}
+.main{display:flex;flex:1;overflow:hidden;flex-direction:column;position:relative;}
 .rapoarte-layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── RESIZE HANDLES ── */
+.resize-handle {
+  width: 5px; flex-shrink: 0;
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.15s;
+  position: relative; z-index: 5;
+}
+.resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
+
+.csv-top-resize-handle {
+  height: 6px; width: 100%; flex-shrink: 0;
+  background: var(--border);
+  cursor: row-resize;
+  transition: background 0.15s;
+  position: relative; z-index: 5;
+}
+.csv-top-resize-handle:hover, .csv-top-resize-handle.dragging { background: var(--accent); }
+
 
 /* ── SIDEBAR ── */
 .sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
@@ -123,7 +143,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .stats-bar svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── CSV TAB ── */
-.csv-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.csv-panel{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  min-height:120px;
+  height:60%;
+}
 .csv-toolbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .csv-search{flex:1;padding:7px 10px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
 .csv-search:focus{border-color:var(--accent);}
@@ -224,6 +251,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
         </div>
       </div>
+      <div class="resize-handle" id="resizeHandle"></div>
       <div class="preview">
         <div class="preview-toolbar">
           <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
@@ -261,7 +289,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
     <!-- TAB: CSV -->
     <div class="tab-content" id="content-csv">
-      <div class="csv-panel">
+      <div class="csv-panel" id="csvPanel">
+        <div class="csv-top-resize-handle" id="csvResizeHandle"></div>
         <div class="csv-toolbar">
           <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." oninput="filterCsv()"/>
           <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
@@ -723,6 +752,97 @@ function exportCsv(){
   a.download = 'centralizator_SSM_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
+
+// ── Resize sidebar stânga-dreapta ──
+(function initSidebarResize() {
+  var handle  = document.getElementById('resizeHandle');
+  var sidebar = document.querySelector('.sidebar');
+  if (!handle || !sidebar) return;
+
+  var dragging = false;
+  var startX   = 0;
+  var startW   = 0;
+  var MIN_W    = 180;
+  var MAX_W    = 620;
+
+  handle.addEventListener('mousedown', function(e) {
+    dragging = true;
+    startX   = e.clientX;
+    startW   = sidebar.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor     = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var newW = Math.min(MAX_W, Math.max(MIN_W, startW + (e.clientX - startX)));
+    sidebar.style.width = newW + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+    try { localStorage.setItem('ssm_sidebar_w', sidebar.offsetWidth); } catch(e) {}
+  });
+
+  // Restaurează lățimea salvată
+  try {
+    var saved = parseInt(localStorage.getItem('ssm_sidebar_w'));
+    if (saved >= MIN_W && saved <= MAX_W) sidebar.style.width = saved + 'px';
+  } catch(e) {}
+})();
+
+// ── Resize panou CSV — handle la topul panoului, trage sus/jos ──
+(function initCsvResize() {
+  var handle = document.getElementById('csvResizeHandle');
+  var panel  = document.getElementById('csvPanel');
+  var tabContent = document.getElementById('content-csv');
+  if (!handle || !panel) return;
+
+  var dragging = false;
+  var startY   = 0;
+  var startH   = 0;
+  var MIN_H    = 100;
+
+  handle.addEventListener('mousedown', function(e) {
+    dragging = true;
+    startY   = e.clientY;
+    startH   = panel.offsetHeight;
+    handle.classList.add('dragging');
+    document.body.style.cursor     = 'row-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    // Drag sus = delta negativ = înălțime mai mare
+    var delta  = startY - e.clientY;
+    var maxH   = tabContent ? (tabContent.offsetHeight - 10) : (window.innerHeight - 80);
+    var newH   = Math.min(maxH, Math.max(MIN_H, startH + delta));
+    panel.style.height = newH + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+    try { localStorage.setItem('ssm_csv_h', panel.offsetHeight); } catch(e) {}
+  });
+
+  // Restaurează înălțimea salvată
+  try {
+    var saved = parseInt(localStorage.getItem('ssm_csv_h'));
+    if (saved >= MIN_H) panel.style.height = saved + 'px';
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
