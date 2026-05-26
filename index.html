@@ -128,8 +128,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .csv-search{flex:1;padding:7px 10px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
 .csv-search:focus{border-color:var(--accent);}
 .csv-table-wrap{flex:1;overflow:auto;}
-.csv-table-wrap::-webkit-scrollbar{width:4px;height:4px;}
-.csv-table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.csv-table-wrap::-webkit-scrollbar{width:10px;height:10px;}
+.csv-table-wrap::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+.csv-table-wrap::-webkit-scrollbar-track{background:var(--surface2);}
+.csv-table-wrap::-webkit-scrollbar-thumb:hover{background:var(--accent);}
 .csv-table{width:100%;border-collapse:collapse;font-size:12px;}
 .csv-table th{background:var(--surface2);border:1px solid var(--border);padding:6px 10px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
 .csv-table th:hover{background:var(--accent-light);color:var(--accent);}
