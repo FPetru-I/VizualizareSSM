@@ -390,8 +390,15 @@ function filterFiles(){
     (f.nr||'').toLowerCase().includes(q)||
     (f.date||'').includes(q)
   );
-  if(sort==='newest') list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  else if(sort==='oldest') list.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
+  if(sort==='newest') list.sort((a,b)=>{
+    const dateDiff = (b.date||'').localeCompare(a.date||'');
+    return dateDiff !== 0 ? dateDiff : getNr(b) - getNr(a);
+  });
+  else if(sort==='oldest') list.sort((a,b)=>{
+    const dateDiff = (a.date||'').localeCompare(b.date||'');
+    return dateDiff !== 0 ? dateDiff : getNr(a) - getNr(b);
+  });
   else list.sort((a,b)=>a.name.localeCompare(b.name));
   document.getElementById('countBadge').textContent=list.length+' / '+allFiles.length+' rapoarte';
   renderList(list);
