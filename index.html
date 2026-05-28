@@ -364,6 +364,8 @@ async function loadRapoarte(){
     setStatus('ok',allFiles.length+' rapoarte');
     document.getElementById('countBadge').textContent=allFiles.length+' rapoarte';
     filterFiles();
+    // Prefetch automat cele mai recente 3 rapoarte necached
+    setTimeout(function(){ prefetchRecent(3); }, 800);
   }catch(e){
     setStatus('error','Eroare conexiune');
     document.getElementById('fileList').innerHTML='<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele.</span></div>';
@@ -505,6 +507,37 @@ function prefetchOnHover(filename){
   }, 300); // 300ms delay — nu prefetch dacă utilizatorul trece rapid
 }
 
+async function prefetchRecent(n) {
+  // Selectează primele N rapoarte necached din listă (deja sortate newest first)
+  var toFetch = allFiles.filter(function(f) {
+    return !isCached(f.name) && !prefetching.has(f.name);
+  }).slice(0, n);
+
+  if (toFetch.length === 0) return;
+
+  // Descarcă câte 2 în paralel
+  for (var i = 0; i < toFetch.length; i += 2) {
+    var batch = toFetch.slice(i, i + 2);
+    await Promise.all(batch.map(function(f) {
+      var fname = f.name;
+      prefetching.add(fname);
+      return fetchPDF(fname, null)
+        .then(function(base64) {
+          if (base64) {
+            saveToCache(fname, base64);
+            filterFiles(); // refresh indicator ●
+          }
+          prefetching.delete(fname);
+        })
+        .catch(function() {
+          prefetching.delete(fname);
+        });
+    }));
+    // Pauză 200ms între batch-uri ca să nu suprasolicite GAS
+    await new Promise(function(r) { setTimeout(r, 200); });
+  }
+}
+  
 async function fetchPDF(filename, onProgress){
   const url = GAS_URL+'?action=pdf&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
   const res  = await fetch(url);
