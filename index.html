@@ -680,10 +680,16 @@ function downloadCurrent(){
   if(!currentFile) return;
   const frame = document.getElementById('pdfFrame');
 
-  const doPrint = function(){
+ const doPrint = function(){
     try{
+      // Setează titlul paginii părinte temporar — Chrome îl folosește la print
+      const originalTitle = document.title;
+      const reportTitle = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : originalTitle;
+      document.title = reportTitle;
       frame.contentWindow.focus();
       frame.contentWindow.print();
+      // Restaurează titlul original după print
+      setTimeout(function(){ document.title = originalTitle; }, 1000);
     }catch(e){
       // Fallback: deschide în filă nouă și printează
       const html = currentBlob;
