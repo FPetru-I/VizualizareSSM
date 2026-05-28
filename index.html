@@ -288,7 +288,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxZWxfr6bPiEWP-ifvAFeNP8r5VWeVmKGfFBnnW17sC5LAV47uSZ1GAxqar8vpQ4Em0RQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpbVYPyfjCj_0HUDwMTgTSnw7QwpwXaIEsYSl1-4mdWLou8qK6EWBypOgF4hF1tng91Q/exec';
 
 let allFiles=[], currentFile=null, currentBlob=null, sessionToken=null;
 // ── Cache localStorage pentru PDF-uri ──
@@ -496,9 +496,9 @@ function prefetchOnHover(filename){
   prefetchTimer = setTimeout(()=>{
     if(!isCached(filename) && !prefetching.has(filename)){
       prefetching.add(filename);
-      fetchPDF(filename, null).then(base64=>{
-        if(base64){
-          saveToCache(filename, base64);
+      fetchHTML(filename).then(html=>{
+        if(html){
+          saveToCache(filename, html);
           prefetching.delete(filename);
           filterFiles(); // refresh lista să arate indicatorul ●
         }
@@ -521,10 +521,10 @@ async function prefetchRecent(n) {
     await Promise.all(batch.map(function(f) {
       var fname = f.name;
       prefetching.add(fname);
-      return fetchPDF(fname, null)
-        .then(function(base64) {
-          if (base64) {
-            saveToCache(fname, base64);
+      return fetchHTML(fname)
+        .then(function(html) {
+          if (html) {
+            saveToCache(fname, html);
             filterFiles(); // refresh indicator ●
           }
           prefetching.delete(fname);
@@ -538,6 +538,18 @@ async function prefetchRecent(n) {
   }
 }
   
+async function fetchHTML(filename){
+  const url = GAS_URL+'?action=html&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
+  const res  = await fetch(url);
+  if(!res.ok) return null;
+  const text = await res.text();
+  let data;
+  try{ data = JSON.parse(text); } catch(e){ return null; }
+  if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return null; }
+  if(data.status!=='success') return null;
+  return data.html;
+}
+
 async function fetchPDF(filename, onProgress){
   const url = GAS_URL+'?action=pdf&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
   const res  = await fetch(url);
@@ -580,70 +592,79 @@ async function fetchPDF(filename, onProgress){
 async function previewCurrent(){
   if(!currentFile) return;
 
-  // 1. Verifica cache in-memory
-  if(currentBlob){ showPdfBlob(currentBlob); return; }
+  // 1. Verifica cache in-memory (HTML string)
+  if(currentBlob){ showHtmlPreview(currentBlob); return; }
 
   // 2. Verifica cache localStorage
   const cached = loadFromCache(currentFile.name);
   if(cached){
-    currentBlob = base64ToBlob(cached);
-    showPdfBlob(currentBlob);
+    currentBlob = cached; // HTML string
+    showHtmlPreview(cached);
     return;
   }
 
-  // 3. Descarca de la GAS cu progress
+  // 3. Descarcă HTML de la GAS cu progress simulat
   showPreviewState('loading');
-  document.getElementById('previewProgress').textContent=currentFile.name;
-  document.getElementById('previewProgressPct').textContent='0%';
-  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('previewProgress').textContent = currentFile.name;
+  document.getElementById('previewProgressPct').textContent = '0%';
+  document.getElementById('progressFill').style.width = '0%';
 
-  // Animație progres simulat — avansează lin până la 85% în ~8s
+  // HTML e mai mic decât PDF — progres mai rapid
   let simPct = 0;
   const simInterval = setInterval(()=>{
     const remaining = 85 - simPct;
-    simPct += remaining * 0.08;
+    simPct += remaining * 0.15;
     const pct = Math.round(simPct);
-    document.getElementById('previewProgressPct').textContent=pct+'%';
-    document.getElementById('progressFill').style.width=pct+'%';
-  }, 200);
+    document.getElementById('previewProgressPct').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+  }, 100);
 
   try{
-    const base64 = await fetchPDF(currentFile.name, null);
+    const html = await fetchHTML(currentFile.name);
     clearInterval(simInterval);
-    document.getElementById('previewProgressPct').textContent='100%';
-    document.getElementById('progressFill').style.width='100%';
-    
-    if(!base64) throw new Error('Fișier indisponibil');
-    saveToCache(currentFile.name, base64);
-    currentBlob = base64ToBlob(base64);
-    showPdfBlob(currentBlob);
-    filterFiles(); // refresh pentru indicatorul ●
+    document.getElementById('previewProgressPct').textContent = '100%';
+    document.getElementById('progressFill').style.width = '100%';
+
+    if(!html) throw new Error('Fișier HTML indisponibil');
+    saveToCache(currentFile.name, html);
+    currentBlob = html; // stocăm HTML string ca "blob"
+    showHtmlPreview(html);
+    filterFiles(); // refresh indicator ●
   }catch(e){
     clearInterval(simInterval);
     showPreviewState('error');
-    showPreviewState('error');
-    document.getElementById('previewErrorMsg').textContent='Eroare: '+(e.message||'necunoscută');
+    document.getElementById('previewErrorMsg').textContent = 'Eroare: '+(e.message||'necunoscută');
   }
 }
 
 function showPdfBlob(blob){
+  // Fallback pentru compatibilitate (neutilizat în fluxul principal)
   const objUrl = URL.createObjectURL(blob);
+  const frame = document.getElementById('pdfFrame');
+  frame.src = objUrl;
+  frame.className = 'pdf-frame show';
+  showPreviewState(null);
+}
+
+function showHtmlPreview(html){
+  const frame = document.getElementById('pdfFrame');
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   if(isMobile){
-    // Pe mobil iframe nu funcționează — deschidem în filă nouă
+    // Pe mobil: blob URL deschis în filă nouă
+    const blob = new Blob([html], {type: 'text/html'});
+    const objUrl = URL.createObjectURL(blob);
     showPreviewState(null);
-    document.getElementById('pdfFrame').className = 'pdf-frame';
+    frame.className = 'pdf-frame';
     const notice = document.getElementById('previewEmpty');
     notice.style.display = 'flex';
-    notice.innerHTML = `
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      <p style="margin-top:8px">${currentFile ? currentFile.name : ''}</p>
-      <a href="${objUrl}" target="_blank" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:500;">
-        Deschide PDF
-      </a>`;
+    notice.innerHTML =
+      '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+      '<p style="margin-top:8px">' + (currentFile ? currentFile.name : '') + '</p>' +
+      '<a href="' + objUrl + '" target="_blank" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:500;">Deschide raportul</a>';
   } else {
-    const frame = document.getElementById('pdfFrame');
-    frame.src = objUrl;
+    // Desktop: srcdoc în iframe — text selectabil, calitate perfectă
+    frame.srcdoc = html;
     frame.className = 'pdf-frame show';
     showPreviewState(null);
   }
@@ -651,11 +672,29 @@ function showPdfBlob(blob){
   
 function downloadCurrent(){
   if(!currentFile) return;
-  if(currentBlob){
-    const a=document.createElement('a');a.href=URL.createObjectURL(currentBlob);a.download=currentFile.name;a.click();
+  const frame = document.getElementById('pdfFrame');
+
+  const doPrint = function(){
+    try{
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    }catch(e){
+      // Fallback: deschide în filă nouă și printează
+      const html = currentBlob;
+      if(html && typeof html === 'string'){
+        const w = window.open('','_blank');
+        if(w){ w.document.write(html); w.document.close(); w.addEventListener('load',()=>{ setTimeout(()=>w.print(),300); }); }
+      }
+    }
+  };
+
+  if(currentBlob && frame.srcdoc){
+    // HTML deja încărcat în iframe
+    doPrint();
   } else {
+    // Încarcă mai întâi, apoi printează
     previewCurrent().then(()=>{
-      if(currentBlob){const a=document.createElement('a');a.href=URL.createObjectURL(currentBlob);a.download=currentFile.name;a.click();}
+      setTimeout(doPrint, 800);
     });
   }
 }
