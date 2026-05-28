@@ -666,7 +666,11 @@ function showHtmlPreview(html){
     // Desktop: srcdoc în iframe — text selectabil, calitate perfectă
     frame.srcdoc = html;
     frame.className = 'pdf-frame show';
-    showPreviewState(null);
+    frame.onload = function() {
+      try {
+        frame.contentDocument.title = currentFile ? currentFile.name.replace('.pdf','') : '';
+      } catch(e) {}
+    };
   }
 }
   
