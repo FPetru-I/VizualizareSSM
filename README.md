@@ -45,9 +45,9 @@
 │  (GitHub Pages /     │◄───────►│  (GAS Proxy)          │◄──────►│  repo privat    │
 │   Netlify)           │  HTTPS  │  - login/token        │  HTTPS │  RapoarteSSM    │
 └──────────────────────┘         │  - listare fișiere    │        └─────────────────┘
-                                  │  - servire PDF binar  │
-                                  │  - servire CSV        │
-                                  └───────────────────────┘
+                                 │  - servire PDF binar  │
+                                 │  - servire CSV        │
+                                 └───────────────────────┘
 ```
 
 **De ce GAS ca proxy:**
