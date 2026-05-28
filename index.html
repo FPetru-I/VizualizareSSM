@@ -56,21 +56,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-content{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.tab-content{display:none;flex:1;overflow:hidden;}
 .tab-content.active{display:flex;}
 
 /* ── MAIN LAYOUT ── */
 .main{display:flex;flex:1;overflow:hidden;flex-direction:column;}
 .rapoarte-layout{display:flex;flex:1;overflow:hidden;}
-
-/* ── RESIZE HANDLES ── */
-.resize-handle{width:5px;flex-shrink:0;background:var(--border);cursor:col-resize;transition:background 0.15s;position:relative;z-index:5;}
-.resize-handle:hover,.resize-handle.dragging{background:var(--accent);}
-
-/* ── ZOOM ── */
-.btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
-.zoom-level{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;min-width:36px;text-align:center;}
-.toolbar-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
@@ -218,7 +209,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="main">
     <!-- TAB: RAPOARTE -->
     <div class="tab-content active rapoarte-layout" id="content-rapoarte">
-      <div class="sidebar" id="sidebar">
+      <div class="sidebar">
         <div class="sidebar-toolbar">
           <div class="search-wrap">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -237,15 +228,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
         </div>
       </div>
-      <div class="resize-handle" id="resizeHandle"></div>
       <div class="preview">
         <div class="preview-toolbar">
           <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
-          <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează">−</button>
-          <span class="zoom-level" id="zoomLevel">100%</span>
-          <button class="btn btn-icon" id="btnZoomIn" onclick="zoomPreview(25)" disabled title="Mărește">+</button>
-          <button class="btn btn-icon" id="btnZoomReset" onclick="zoomPreview(0)" disabled title="Reset zoom" style="font-size:11px;">↺</button>
-          <div class="toolbar-divider"></div>
           <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descarcă
@@ -280,7 +265,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
     <!-- TAB: CSV -->
     <div class="tab-content" id="content-csv">
-      <div class="csv-panel" id="csvPanel">
+      <div class="csv-panel">
         <div class="csv-toolbar">
           <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." oninput="filterCsv()"/>
           <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
@@ -306,7 +291,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpbVYPyfjCj_0HUDwMTgTSnw7QwpwXaIEsYSl1-4mdWLou8qK6EWBypOgF4hF1tng91Q/exec';
 
 let allFiles=[], currentFile=null, currentBlob=null, sessionToken=null;
-let currentZoom = 100;
 // ── Cache localStorage pentru PDF-uri ──
 const LS_PREFIX = 'ssm_pdf_';
 const LS_MAX_MB = 4; // max MB pentru cache total
@@ -406,8 +390,15 @@ function filterFiles(){
     (f.nr||'').toLowerCase().includes(q)||
     (f.date||'').includes(q)
   );
-  if(sort==='newest') list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  else if(sort==='oldest') list.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
+  if(sort==='newest') list.sort((a,b)=>{
+    const dateDiff = (b.date||'').localeCompare(a.date||'');
+    return dateDiff !== 0 ? dateDiff : getNr(b) - getNr(a);
+  });
+  else if(sort==='oldest') list.sort((a,b)=>{
+    const dateDiff = (a.date||'').localeCompare(b.date||'');
+    return dateDiff !== 0 ? dateDiff : getNr(a) - getNr(b);
+  });
   else list.sort((a,b)=>a.name.localeCompare(b.name));
   document.getElementById('countBadge').textContent=list.length+' / '+allFiles.length+' rapoarte';
   renderList(list);
@@ -438,14 +429,10 @@ function renderList(files){
 }
 
 function selectFile(f){
-  currentFile=f; currentBlob=null; currentZoom=100;
+  currentFile=f; currentBlob=null;
   document.getElementById('previewFilename').textContent=f.name;
   document.getElementById('previewFilename').className='preview-filename';
   document.getElementById('btnDownload').disabled=false;
-  document.getElementById('btnZoomIn').disabled=false;
-  document.getElementById('btnZoomOut').disabled=false;
-  document.getElementById('btnZoomReset').disabled=false;
-  document.getElementById('zoomLevel').textContent='100%';
   document.getElementById('statName').textContent=f.nr||f.name;
   document.getElementById('statDate').textContent=formatDate(f.date);
   document.getElementById('statLocation').textContent=f.location||'—';
@@ -458,18 +445,6 @@ function showPreviewState(state){
   document.getElementById('previewEmpty').style.display=state==='empty'?'flex':'none';
   document.getElementById('previewLoading').className='preview-loading'+(state==='loading'?' show':'');
   document.getElementById('previewError').className='preview-error'+(state==='error'?' show':'');
-}
-
-function zoomPreview(delta){
-  const frame = document.getElementById('pdfFrame');
-  if(!frame.srcdoc && !frame.src) return;
-  if(delta === 0){ currentZoom = 100; }
-  else { currentZoom = Math.min(300, Math.max(50, currentZoom + delta)); }
-  document.getElementById('zoomLevel').textContent = currentZoom + '%';
-  try{
-    const body = frame.contentDocument && frame.contentDocument.body;
-    if(body) body.style.zoom = (currentZoom / 100);
-  }catch(e){}
 }
 
 // ── CACHE localStorage ──
@@ -704,12 +679,7 @@ function showHtmlPreview(html){
     frame.srcdoc = htmlWithTitle;
     frame.className = 'pdf-frame show';
     showPreviewState(null);
-    // Aplică zoom curent dacă nu e 100%
-    if(currentZoom !== 100){
-      frame.onload = function(){
-        try{ frame.contentDocument.body.style.zoom = (currentZoom/100); }catch(e){}
-      };
-    }
+    // Fără onload — titlul e deja setat corect în srcdoc
   }
 }
 
@@ -717,10 +687,16 @@ function downloadCurrent(){
   if(!currentFile) return;
   const frame = document.getElementById('pdfFrame');
 
-  const doPrint = function(){
+ const doPrint = function(){
     try{
+      // Setează titlul paginii părinte temporar — Chrome îl folosește la print
+      const originalTitle = document.title;
+      const reportTitle = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : originalTitle;
+      document.title = reportTitle;
       frame.contentWindow.focus();
       frame.contentWindow.print();
+      // Restaurează titlul original după print
+      setTimeout(function(){ document.title = originalTitle; }, 1000);
     }catch(e){
       // Fallback: deschide în filă nouă și printează
       const html = currentBlob;
@@ -857,36 +833,6 @@ function exportCsv(){
   a.download = 'centralizator_SSM_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
-
-// ── Resize sidebar stânga-dreapta ──
-(function initSidebarResize(){
-  const handle  = document.getElementById('resizeHandle');
-  const sidebar = document.getElementById('sidebar');
-  if(!handle||!sidebar) return;
-  let dragging=false, startX=0, startW=0;
-  const MIN_W=180, MAX_W=620;
-  handle.addEventListener('mousedown',function(e){
-    dragging=true; startX=e.clientX; startW=sidebar.offsetWidth;
-    handle.classList.add('dragging');
-    document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove',function(e){
-    if(!dragging) return;
-    sidebar.style.width=Math.min(MAX_W,Math.max(MIN_W,startW+(e.clientX-startX)))+'px';
-  });
-  document.addEventListener('mouseup',function(){
-    if(!dragging) return;
-    dragging=false; handle.classList.remove('dragging');
-    document.body.style.cursor=''; document.body.style.userSelect='';
-    try{ localStorage.setItem('ssm_sidebar_w',sidebar.offsetWidth); }catch(e){}
-  });
-  try{
-    const saved=parseInt(localStorage.getItem('ssm_sidebar_w'));
-    if(saved>=MIN_W&&saved<=MAX_W) sidebar.style.width=saved+'px';
-  }catch(e){}
-})();
-
 </script>
 </body>
 </html>
