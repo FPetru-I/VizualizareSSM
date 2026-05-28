@@ -63,6 +63,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .main{display:flex;flex:1;overflow:hidden;flex-direction:column;}
 .rapoarte-layout{display:flex;flex:1;overflow:hidden;}
 
+/* ── ZOOM ── */
+.btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
+.zoom-level{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;min-width:36px;text-align:center;}
+.toolbar-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
+  
 /* ── SIDEBAR ── */
 .sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
 .sidebar-toolbar{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
@@ -231,6 +236,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <div class="preview">
         <div class="preview-toolbar">
           <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
+          <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează">−</button>
+          <span class="zoom-level" id="zoomLevel">100%</span>
+          <button class="btn btn-icon" id="btnZoomIn" onclick="zoomPreview(25)" disabled title="Mărește">+</button>
+          <button class="btn btn-icon" id="btnZoomReset" onclick="zoomPreview(0)" disabled title="Reset zoom" style="font-size:11px;">↺</button>
+          <div class="toolbar-divider"></div>
           <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descarcă
@@ -291,6 +301,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpbVYPyfjCj_0HUDwMTgTSnw7QwpwXaIEsYSl1-4mdWLou8qK6EWBypOgF4hF1tng91Q/exec';
 
 let allFiles=[], currentFile=null, currentBlob=null, sessionToken=null;
+let currentZoom = 100;
+
 // ── Cache localStorage pentru PDF-uri ──
 const LS_PREFIX = 'ssm_pdf_';
 const LS_MAX_MB = 4; // max MB pentru cache total
@@ -429,10 +441,14 @@ function renderList(files){
 }
 
 function selectFile(f){
-  currentFile=f; currentBlob=null;
+  currentFile=f; currentBlob=null; currentZoom=100;
   document.getElementById('previewFilename').textContent=f.name;
   document.getElementById('previewFilename').className='preview-filename';
   document.getElementById('btnDownload').disabled=false;
+  document.getElementById('btnZoomIn').disabled=false;
+  document.getElementById('btnZoomOut').disabled=false;
+  document.getElementById('btnZoomReset').disabled=false;
+  document.getElementById('zoomLevel').textContent='100%';
   document.getElementById('statName').textContent=f.nr||f.name;
   document.getElementById('statDate').textContent=formatDate(f.date);
   document.getElementById('statLocation').textContent=f.location||'—';
@@ -446,6 +462,20 @@ function showPreviewState(state){
   document.getElementById('previewLoading').className='preview-loading'+(state==='loading'?' show':'');
   document.getElementById('previewError').className='preview-error'+(state==='error'?' show':'');
 }
+
+function zoomPreview(delta){
+  const frame = document.getElementById('pdfFrame');
+  if(!frame.srcdoc && !frame.src) return;
+  if(delta === 0){ currentZoom = 100; }
+  else { currentZoom = Math.min(300, Math.max(50, currentZoom + delta)); }
+  document.getElementById('zoomLevel').textContent = currentZoom + '%';
+  try{
+    const body = frame.contentDocument && frame.contentDocument.body;
+    if(body) body.style.zoom = (currentZoom / 100);
+  }catch(e){}
+}
+
+
 
 // ── CACHE localStorage ──
 function getCacheKey(filename){ return LS_PREFIX + filename; }
@@ -680,6 +710,12 @@ function showHtmlPreview(html){
     frame.className = 'pdf-frame show';
     showPreviewState(null);
     // Fără onload — titlul e deja setat corect în srcdoc
+    // Aplică zoom curent dacă nu e 100%
+    if(currentZoom !== 100){
+      frame.onload = function(){
+        try{ frame.contentDocument.body.style.zoom = (currentZoom/100); }catch(e){}
+      };
+    }
   }
 }
 
