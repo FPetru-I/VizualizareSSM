@@ -662,26 +662,18 @@ function showHtmlPreview(html){
       '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
       '<p style="margin-top:8px">' + (currentFile ? currentFile.name : '') + '</p>' +
       '<a href="' + objUrl + '" target="_blank" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:500;">Deschide raportul</a>';
-  } else {
-    // Desktop: srcdoc în iframe — text selectabil, calitate perfectă
-    // Injectează titlul corect în HTML înainte de a-l încărca în iframe
-    const title = currentFile ? currentFile.name.replace(/\.pdf$/i, '') : 'Raport SSM';
+ } else {
+    const title = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
     const titleTag = '<title>' + title + '</title>';
-    // Acoperă: gol, spațiu, orice conținut, majuscule
     let htmlWithTitle = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, titleTag);
-    // Dacă nu a găsit deloc <title>, îl injectează în <head>
     if(!htmlWithTitle.includes(titleTag)){
       htmlWithTitle = htmlWithTitle.replace(/<head>/i, '<head>' + titleTag);
     }
     frame.srcdoc = htmlWithTitle;
     frame.className = 'pdf-frame show';
-    frame.onload = function() {
-      try {
-        frame.contentDocument.title = currentFile ? currentFile.name.replace('.pdf','') : '';
-      } catch(e) {}
-    };
+    showPreviewState(null);
+    // Fără onload — titlul e deja setat corect în srcdoc
   }
-}
   
 function downloadCurrent(){
   if(!currentFile) return;
