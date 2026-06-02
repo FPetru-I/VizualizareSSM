@@ -12,6 +12,7 @@
   --text-faint:#9b9890;--accent:#1a4d8f;--accent-light:#e8eef7;
   --accent-dark:#0f3060;--yes:#1a6b3c;--yes-bg:#eaf5ee;
   --danger:#c0392b;--radius:8px;
+  --test:#b45309;--test-bg:#fef3c7;--test-border:#fde68a;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
@@ -51,13 +52,25 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .logout-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── TABS ── */
-.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
-.tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;display:flex;align-items:center;gap:6px;margin-bottom:-1px;}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;overflow-x:auto;}
+.tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;display:flex;align-items:center;gap:6px;margin-bottom:-1px;white-space:nowrap;}
 .tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab.tab-test.active{color:var(--test);border-bottom-color:var(--test);}
+.tab.tab-test:hover{color:var(--test);}
 .tab-content{display:none;flex:1;overflow:hidden;}
 .tab-content.active{display:flex;}
+.tab-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--test-bg);color:var(--test);border:1px solid var(--test-border);}
+
+/* ── TEST FILE ITEM ── */
+.file-item.test-item .file-icon{background:var(--test-bg);}
+.file-item.test-item .file-icon svg{stroke:var(--test);}
+.file-item.test-item.active .file-icon{background:var(--test);}
+.file-item.test-item.active .file-icon svg{stroke:#fff;}
+.file-item.test-item{border-color:var(--test-border)!important;}
+.file-item.test-item:hover{background:var(--test-bg);border-color:var(--test)!important;}
+.file-item.test-item.active{background:var(--test-bg);border-color:var(--test)!important;box-shadow:inset 0 0 0 1px var(--test);}
 
 /* ── MAIN LAYOUT ── */
 .main{display:flex;flex:1;overflow:hidden;flex-direction:column;}
@@ -67,7 +80,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
 .zoom-level{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;min-width:36px;text-align:center;}
 .toolbar-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
-  
+
 /* ── SIDEBAR ── */
 .sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
 .sidebar-toolbar{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
@@ -96,7 +109,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .file-meta{font-size:11px;color:var(--text-muted);display:flex;gap:8px;margin-top:2px;flex-wrap:wrap;}
 .file-meta span{display:flex;align-items:center;gap:3px;}
 .file-meta svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.badge-new{font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--yes-bg);color:var(--yes);flex-shrink:0;}
 .state-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 20px;color:var(--text-muted);font-size:13px;text-align:center;}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -132,7 +144,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 /* ── CSV TAB ── */
 .csv-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .csv-toolbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.csv-search{flex:1;padding:7px 10px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
+.csv-search{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
 .csv-search:focus{border-color:var(--accent);}
 .csv-table-wrap{flex:1;overflow:auto;}
 .csv-table-wrap::-webkit-scrollbar{width:10px;height:10px;}
@@ -151,7 +163,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .badge-da{background:var(--yes-bg);color:var(--yes);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 .badge-nu{background:#fef2f2;color:var(--danger);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 .badge-na{background:#f0f4f8;color:#5a7a9e;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
-
 
 /* ── PROGRESS BAR PDF ── */
 .pdf-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
@@ -201,18 +212,32 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
   <!-- TABS -->
   <div class="tabs">
+    <!-- Rapoarte -->
     <div class="tab active" id="tab-rapoarte" onclick="switchTab('rapoarte')">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Rapoarte PDF
+      Rapoarte
     </div>
+    <!-- CSV Normal -->
     <div class="tab" id="tab-csv" onclick="switchTab('csv')">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-      Centralizator CSV
+      Centralizator
+    </div>
+    <!-- Teste -->
+    <div class="tab tab-test" id="tab-teste" onclick="switchTab('teste')">
+      <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+      Teste
+      <span class="tab-badge" id="testeBadge" style="display:none;"></span>
+    </div>
+    <!-- CSV Teste -->
+    <div class="tab tab-test" id="tab-csv-teste" onclick="switchTab('csv-teste')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      CSV Teste
     </div>
   </div>
 
   <div class="main">
-    <!-- TAB: RAPOARTE -->
+
+    <!-- ═══ TAB: RAPOARTE NORMALE ═══ -->
     <div class="tab-content active rapoarte-layout" id="content-rapoarte">
       <div class="sidebar">
         <div class="sidebar-toolbar">
@@ -233,7 +258,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
         </div>
       </div>
-      <div class="preview">
+      <div class="preview" id="preview-rapoarte">
         <div class="preview-toolbar">
           <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
           <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează">−</button>
@@ -253,17 +278,17 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           </div>
           <div class="preview-loading" id="previewLoading">
             <div class="spinner"></div>
-            <span>Se încarcă PDF-ul...</span>
+            <span>Se încarcă raportul...</span>
             <span class="pdf-progress-pct" id="previewProgressPct"></span>
             <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="progressFill"></div></div>
             <span class="preview-progress" id="previewProgress"></span>
           </div>
           <div class="preview-error" id="previewError">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="previewErrorMsg">Eroare la încărcarea PDF-ului.</span>
+            <span id="previewErrorMsg">Eroare la încărcarea raportului.</span>
             <button class="btn" onclick="previewCurrent()">Încearcă din nou</button>
           </div>
-          <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare PDF"></iframe>
+          <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare raport"></iframe>
         </div>
         <div class="stats-bar" id="statsBar" style="display:none;">
           <span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span id="statName">—</span></span>
@@ -273,7 +298,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       </div>
     </div>
 
-    <!-- TAB: CSV -->
+    <!-- ═══ TAB: CSV NORMAL ═══ -->
     <div class="tab-content" id="content-csv">
       <div class="csv-panel">
         <div class="csv-toolbar">
@@ -282,7 +307,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             Reîncarcă
           </button>
-          <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv()" disabled>
+          <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv(false)" disabled>
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
           </button>
@@ -294,139 +319,240 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <div class="csv-status" id="csvStatus"></div>
       </div>
     </div>
+
+    <!-- ═══ TAB: TESTE ═══ -->
+    <div class="tab-content rapoarte-layout" id="content-teste">
+      <div class="sidebar">
+        <div class="sidebar-toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" type="text" id="searchInputTest" placeholder="Caută în rapoarte test..." oninput="filterTeste()"/>
+          </div>
+          <div class="toolbar-row">
+            <select class="sort-select" id="sortSelectTest" onchange="filterTeste()">
+              <option value="newest">Cele mai noi întâi</option>
+              <option value="oldest">Cele mai vechi întâi</option>
+              <option value="name">Alfabetic</option>
+            </select>
+            <span class="count-badge" id="countBadgeTest">— teste</span>
+          </div>
+        </div>
+        <div class="file-list" id="fileListTest">
+          <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
+        </div>
+      </div>
+      <div class="preview">
+        <div class="preview-toolbar">
+          <span class="preview-filename empty" id="previewFilenameTest">Selectează un raport test din listă</span>
+          <button class="btn btn-icon" id="btnZoomOutTest" onclick="zoomPreviewTest(-25)" disabled title="Micșorează">−</button>
+          <span class="zoom-level" id="zoomLevelTest">100%</span>
+          <button class="btn btn-icon" id="btnZoomInTest" onclick="zoomPreviewTest(25)" disabled title="Mărește">+</button>
+          <button class="btn btn-icon" id="btnZoomResetTest" onclick="zoomPreviewTest(0)" disabled title="Reset zoom" style="font-size:11px;">↺</button>
+          <div class="toolbar-divider"></div>
+          <button class="btn" id="btnDownloadTest" disabled onclick="downloadCurrentTest()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descarcă
+          </button>
+        </div>
+        <div class="preview-body">
+          <div class="preview-empty" id="previewEmptyTest">
+            <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+            <p>Selectează un raport test din listă pentru a-l vizualiza.</p>
+          </div>
+          <div class="preview-loading" id="previewLoadingTest">
+            <div class="spinner"></div>
+            <span>Se încarcă raportul test...</span>
+            <span class="pdf-progress-pct" id="previewProgressPctTest"></span>
+            <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="progressFillTest"></div></div>
+            <span class="preview-progress" id="previewProgressTest"></span>
+          </div>
+          <div class="preview-error" id="previewErrorTest">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="previewErrorMsgTest">Eroare la încărcarea raportului test.</span>
+            <button class="btn" onclick="previewCurrentTest()">Încearcă din nou</button>
+          </div>
+          <iframe class="pdf-frame" id="pdfFrameTest" title="Previzualizare raport test"></iframe>
+        </div>
+        <div class="stats-bar" id="statsBarTest" style="display:none;">
+          <span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span id="statNameTest">—</span></span>
+          <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="statDateTest">—</span></span>
+          <span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="statLocationTest">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: CSV TESTE ═══ -->
+    <div class="tab-content" id="content-csv-teste">
+      <div class="csv-panel">
+        <div class="csv-toolbar">
+          <input class="csv-search" type="text" id="csvSearchTest" placeholder="Caută în rapoartele test..." oninput="filterCsvTest()"/>
+          <button class="btn" onclick="loadCsvTest()" id="btnRefreshCsvTest">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Reîncarcă
+          </button>
+          <button class="btn btn-primary" id="btnExportCsvTest" onclick="exportCsv(true)" disabled>
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV Teste
+          </button>
+          <span class="count-badge" id="csvCountBadgeTest"></span>
+        </div>
+        <div class="csv-table-wrap" id="csvTableWrapTest">
+          <div class="state-msg"><span style="color:var(--text-faint)">Apasă tab-ul pentru a încărca datele test.</span></div>
+        </div>
+        <div class="csv-status" id="csvStatusTest"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpbVYPyfjCj_0HUDwMTgTSnw7QwpwXaIEsYSl1-4mdWLou8qK6EWBypOgF4hF1tng91Q/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrMDS1EjthTLiQXUbY_1hxHxaNYLoXRyPl5aDpUQIHYfiewbgX3urBF4XZAb1to84G6A/exec';
 
-let allFiles=[], currentFile=null, currentBlob=null, sessionToken=null;
+// ── State rapoarte normale ──
+let allFiles = [], currentFile = null, currentBlob = null, sessionToken = null;
 let currentZoom = 100;
 
-// ── Cache localStorage pentru PDF-uri ──
+// ── State rapoarte teste ──
+let allTestFiles = [], currentTestFile = null, currentTestBlob = null;
+let currentTestZoom = 100;
+let testeLoaded = false;
+
+// ── State CSV ──
+let csvData = [], csvHeaders = [], csvSortCol = -1, csvSortDir = 1;
+let csvLoaded = false;
+let csvTestData = [], csvTestHeaders = [], csvTestSortCol = -1, csvTestSortDir = 1;
+let csvTestLoaded = false;
+
+// ── Cache localStorage ──
 const LS_PREFIX = 'ssm_pdf_';
-const LS_MAX_MB = 4; // max MB pentru cache total
+const LS_TEST_PREFIX = 'ssm_test_';
+const LS_MAX_MB = 4;
 
 // ── INIT ──
-(function init(){
+(function init() {
   sessionToken = sessionStorage.getItem('ssm_token');
-  if(sessionToken){ showApp(); loadRapoarte(); }
+  if (sessionToken) { showApp(); loadRapoarte(); }
   else { showLogin(); }
 })();
 
-function showLogin(){
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('appScreen').style.display='none';
-  setTimeout(()=>document.getElementById('passwordInput').focus(), 100);
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+  setTimeout(() => document.getElementById('passwordInput').focus(), 100);
 }
-function showApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appScreen').style.display='flex';
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
 }
 
-async function doLogin(){
-  const pw=document.getElementById('passwordInput').value;
-  const btn=document.getElementById('loginBtn');
-  const err=document.getElementById('loginError');
-  if(!pw) return;
-  btn.disabled=true; btn.textContent='Se verifică...'; err.style.display='none';
-  try{
-    const res=await fetch(GAS_URL+'?action=login&password='+encodeURIComponent(pw));
-    const data=await res.json();
-    if(data.status==='success'){
-      sessionToken=data.token;
-      sessionStorage.setItem('ssm_token',sessionToken);
+async function doLogin() {
+  const pw  = document.getElementById('passwordInput').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  if (!pw) return;
+  btn.disabled = true; btn.textContent = 'Se verifică...'; err.style.display = 'none';
+  try {
+    const res  = await fetch(GAS_URL + '?action=login&password=' + encodeURIComponent(pw));
+    const data = await res.json();
+    if (data.status === 'success') {
+      sessionToken = data.token;
+      sessionStorage.setItem('ssm_token', sessionToken);
       showApp(); loadRapoarte();
     } else {
-      err.textContent=data.message||'Parolă incorectă.';
-      err.style.display='block';
-      document.getElementById('passwordInput').value='';
+      err.textContent = data.message || 'Parolă incorectă.';
+      err.style.display = 'block';
+      document.getElementById('passwordInput').value = '';
       document.getElementById('passwordInput').focus();
     }
-  }catch(e){ err.textContent='Eroare conexiune.'; err.style.display='block'; }
-  btn.disabled=false; btn.textContent='Intră';
+  } catch(e) { err.textContent = 'Eroare conexiune.'; err.style.display = 'block'; }
+  btn.disabled = false; btn.textContent = 'Intră';
 }
 
-function doLogout(){
+function doLogout() {
   sessionStorage.removeItem('ssm_token');
-  sessionToken=null; allFiles=[]; currentFile=null; currentBlob=null;
-  document.getElementById('passwordInput').value='';
+  sessionToken = null; allFiles = []; allTestFiles = [];
+  currentFile = null; currentBlob = null;
+  currentTestFile = null; currentTestBlob = null;
+  document.getElementById('passwordInput').value = '';
   showLogin();
 }
 
 // ── TABS ──
-let csvLoaded = false;
-function switchTab(tab){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('content-'+tab).classList.add('active');
-  if(tab==='csv' && !csvLoaded){ loadCsv(); }
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('content-' + tab).classList.add('active');
+  if (tab === 'csv'       && !csvLoaded)     { loadCsv(); }
+  if (tab === 'teste'     && !testeLoaded)   { loadTeste(); }
+  if (tab === 'csv-teste' && !csvTestLoaded) { loadCsvTest(); }
 }
 
-// ── RAPOARTE ──
-async function loadRapoarte(){
-  setStatus('loading','Se conectează...');
-  try{
-    const res=await fetch(GAS_URL+'?action=rapoarte&token='+encodeURIComponent(sessionToken));
-    const data=await res.json();
-    if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return; }
-    if(data.status!=='success') throw new Error(data.message||'Eroare server');
-    allFiles=data.files||[];
-    setStatus('ok',allFiles.length+' rapoarte');
-    document.getElementById('countBadge').textContent=allFiles.length+' rapoarte';
+// ═══════════════════════════════════════════════
+// RAPOARTE NORMALE
+// ═══════════════════════════════════════════════
+async function loadRapoarte() {
+  setStatus('loading', 'Se conectează...');
+  try {
+    const res  = await fetch(GAS_URL + '?action=rapoarte&token=' + encodeURIComponent(sessionToken));
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
+    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
+    allFiles = data.files || [];
+    setStatus('ok', allFiles.length + ' rapoarte');
+    document.getElementById('countBadge').textContent = allFiles.length + ' rapoarte';
     filterFiles();
-    // Prefetch automat cele mai recente 3 rapoarte necached
-    setTimeout(function(){ prefetchRecent(3); }, 800);
-  }catch(e){
-    setStatus('error','Eroare conexiune');
-    document.getElementById('fileList').innerHTML='<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele.</span></div>';
+    setTimeout(function() { prefetchRecent(3, false); }, 800);
+  } catch(e) {
+    setStatus('error', 'Eroare conexiune');
+    document.getElementById('fileList').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele.</span></div>';
   }
 }
 
-function setStatus(type,label){
-  const dot=document.getElementById('statusDot');
-  dot.className='status-dot'+(type==='loading'?' loading':type==='error'?' error':'');
-  document.getElementById('statusLabel').textContent=label;
+function setStatus(type, label) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+  document.getElementById('statusLabel').textContent = label;
 }
 
-function isNew(d){if(!d)return false;return(new Date()-new Date(d))<14*24*60*60*1000;}
-function formatDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
+function formatDate(d) { if (!d) return '—'; const p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
 
-function filterFiles(){
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  const sort=document.getElementById('sortSelect').value;
-  let list=allFiles.filter(f=>
-    (f.name||'').toLowerCase().includes(q)||
-    (f.location||'').toLowerCase().includes(q)||
-    (f.nr||'').toLowerCase().includes(q)||
+function filterFiles() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  let list = allFiles.filter(f =>
+    (f.name||'').toLowerCase().includes(q) ||
+    (f.location||'').toLowerCase().includes(q) ||
+    (f.nr||'').toLowerCase().includes(q) ||
     (f.date||'').includes(q)
   );
   const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
-  if(sort==='newest') list.sort((a,b)=>{
-    const dateDiff = (b.date||'').localeCompare(a.date||'');
-    return dateDiff !== 0 ? dateDiff : getNr(b) - getNr(a);
-  });
-  else if(sort==='oldest') list.sort((a,b)=>{
-    const dateDiff = (a.date||'').localeCompare(b.date||'');
-    return dateDiff !== 0 ? dateDiff : getNr(a) - getNr(b);
-  });
-  else list.sort((a,b)=>a.name.localeCompare(b.name));
-  document.getElementById('countBadge').textContent=list.length+' / '+allFiles.length+' rapoarte';
-  renderList(list);
+  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
+  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
+  else list.sort((a,b) => a.name.localeCompare(b.name));
+  document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
+  renderList(list, false);
 }
 
-function renderList(files){
-  const el=document.getElementById('fileList');
-  if(!files.length){
-    el.innerHTML='<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Niciun raport găsit.</span></div>';
+function renderList(files, isTest) {
+  const elId   = isTest ? 'fileListTest' : 'fileList';
+  const el     = document.getElementById(elId);
+  const active = isTest ? currentTestFile : currentFile;
+  if (!files.length) {
+    el.innerHTML = '<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Niciun raport găsit.</span></div>';
     return;
   }
-  el.innerHTML=files.map(f=>{
-    const cached = isCached(f.name);
-    return `<div class="file-item ${currentFile&&currentFile.name===f.name?'active':''}"
-      onclick="selectFile(${JSON.stringify(f).replace(/"/g,'&quot;')})"
-      onmouseenter="prefetchOnHover('${f.name.replace(/'/g,"\\'")}')">
+  const lsPrefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
+  el.innerHTML = files.map(f => {
+    const cached = isCached(f.name, isTest);
+    const testCls = isTest ? ' test-item' : '';
+    const activeCls = (active && active.name === f.name) ? ' active' : '';
+    const onclickFn = isTest ? 'selectTestFile' : 'selectFile';
+    const hoverFn   = isTest ? 'prefetchOnHoverTest' : 'prefetchOnHover';
+    return `<div class="file-item${testCls}${activeCls}"
+      onclick="${onclickFn}(${JSON.stringify(f).replace(/"/g,'&quot;')})"
+      onmouseenter="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
       <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div class="file-info">
         <div class="file-name">${f.name}${cached?' <span style="font-size:9px;color:var(--yes);font-family:inherit;">●</span>':''}</div>
@@ -435,438 +561,486 @@ function renderList(files){
           ${f.location?`<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${f.location}</span>`:''}
         </div>
       </div>
-      
     </div>`;
   }).join('');
 }
 
-function selectFile(f){
-  currentFile=f; currentBlob=null; currentZoom=100;
-  document.getElementById('previewFilename').textContent=f.name;
-  document.getElementById('previewFilename').className='preview-filename';
-  document.getElementById('btnDownload').disabled=false;
-  document.getElementById('btnZoomIn').disabled=false;
-  document.getElementById('btnZoomOut').disabled=false;
-  document.getElementById('btnZoomReset').disabled=false;
-  document.getElementById('zoomLevel').textContent='100%';
-  document.getElementById('statName').textContent=f.nr||f.name;
-  document.getElementById('statDate').textContent=formatDate(f.date);
-  document.getElementById('statLocation').textContent=f.location||'—';
-  document.getElementById('statsBar').style.display='flex';
+function selectFile(f) {
+  currentFile = f; currentBlob = null; currentZoom = 100;
+  document.getElementById('previewFilename').textContent = f.name;
+  document.getElementById('previewFilename').className = 'preview-filename';
+  document.getElementById('btnDownload').disabled = false;
+  document.getElementById('btnZoomIn').disabled = false;
+  document.getElementById('btnZoomOut').disabled = false;
+  document.getElementById('btnZoomReset').disabled = false;
+  document.getElementById('zoomLevel').textContent = '100%';
+  document.getElementById('statName').textContent = f.nr || f.name;
+  document.getElementById('statDate').textContent = formatDate(f.date);
+  document.getElementById('statLocation').textContent = f.location || '—';
+  document.getElementById('statsBar').style.display = 'flex';
   filterFiles();
   previewCurrent();
 }
 
-function showPreviewState(state){
-  document.getElementById('previewEmpty').style.display=state==='empty'?'flex':'none';
-  document.getElementById('previewLoading').className='preview-loading'+(state==='loading'?' show':'');
-  document.getElementById('previewError').className='preview-error'+(state==='error'?' show':'');
+function showPreviewState(state, isTest) {
+  const sfx = isTest ? 'Test' : '';
+  document.getElementById('previewEmpty' + sfx).style.display = state === 'empty' ? 'flex' : 'none';
+  document.getElementById('previewLoading' + sfx).className = 'preview-loading' + (state === 'loading' ? ' show' : '');
+  document.getElementById('previewError' + sfx).className = 'preview-error' + (state === 'error' ? ' show' : '');
 }
 
-function zoomPreview(delta){
+function zoomPreview(delta) {
   const frame = document.getElementById('pdfFrame');
-  if(!frame.srcdoc && !frame.src) return;
-  if(delta === 0){ currentZoom = 100; }
+  if (!frame.srcdoc && !frame.src) return;
+  if (delta === 0) { currentZoom = 100; }
   else { currentZoom = Math.min(300, Math.max(50, currentZoom + delta)); }
   document.getElementById('zoomLevel').textContent = currentZoom + '%';
-  try{
-    const body = frame.contentDocument && frame.contentDocument.body;
-    if(body) body.style.zoom = (currentZoom / 100);
-  }catch(e){}
+  try { const b = frame.contentDocument && frame.contentDocument.body; if (b) b.style.zoom = (currentZoom / 100); } catch(e) {}
 }
 
-
-
-// ── CACHE localStorage ──
-function getCacheKey(filename){ return LS_PREFIX + filename; }
-
-function isCached(filename){
-  try{ return !!localStorage.getItem(getCacheKey(filename)); }
-  catch(e){ return false; }
-}
-
-function saveToCache(filename, base64){
-  try{
-    // Verificăm spațiu disponibil — ștergem cele mai vechi dacă depășim limita
-    const key = getCacheKey(filename);
-    const sizeMB = (base64.length * 0.75) / (1024 * 1024);
-    // Calculăm totalul curent
-    let totalMB = 0;
-    const keys = [];
-    for(let i=0; i<localStorage.length; i++){
-      const k = localStorage.key(i);
-      if(k.startsWith(LS_PREFIX)){
-        const v = localStorage.getItem(k);
-        totalMB += (v.length * 0.75) / (1024 * 1024);
-        keys.push({k, size: (v.length * 0.75) / (1024 * 1024)});
-      }
-    }
-    // Dacă depășim limita, ștergem cele mai vechi
-    while(totalMB + sizeMB > LS_MAX_MB && keys.length > 0){
-      const oldest = keys.shift();
-      localStorage.removeItem(oldest.k);
-      totalMB -= oldest.size;
-    }
-    localStorage.setItem(key, base64);
-  }catch(e){ /* localStorage plin — ignorăm */ }
-}
-
-function loadFromCache(filename){
-  try{ return localStorage.getItem(getCacheKey(filename)); }
-  catch(e){ return null; }
-}
-
-function base64ToBlob(base64){
-  const binary = atob(base64);
-  const bytes  = new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-  return new Blob([bytes],{type:'application/pdf'});
-}
-
-// ── PREFETCH LA HOVER ──
-let prefetchTimer = null;
-let prefetching   = new Set();
-
-function prefetchOnHover(filename){
-  if(isCached(filename) || prefetching.has(filename)) return;
-  clearTimeout(prefetchTimer);
-  prefetchTimer = setTimeout(()=>{
-    if(!isCached(filename) && !prefetching.has(filename)){
-      prefetching.add(filename);
-      fetchHTML(filename).then(html=>{
-        if(html){
-          saveToCache(filename, html);
-          prefetching.delete(filename);
-          filterFiles(); // refresh lista să arate indicatorul ●
-        }
-      }).catch(()=>{ prefetching.delete(filename); });
-    }
-  }, 300); // 300ms delay — nu prefetch dacă utilizatorul trece rapid
-}
-
-async function prefetchRecent(n) {
-  // Selectează primele N rapoarte necached din listă (deja sortate newest first)
-  var toFetch = allFiles.filter(function(f) {
-    return !isCached(f.name) && !prefetching.has(f.name);
-  }).slice(0, n);
-
-  if (toFetch.length === 0) return;
-
-  // Descarcă câte 2 în paralel
-  for (var i = 0; i < toFetch.length; i += 2) {
-    var batch = toFetch.slice(i, i + 2);
-    await Promise.all(batch.map(function(f) {
-      var fname = f.name;
-      prefetching.add(fname);
-      return fetchHTML(fname)
-        .then(function(html) {
-          if (html) {
-            saveToCache(fname, html);
-            filterFiles(); // refresh indicator ●
-          }
-          prefetching.delete(fname);
-        })
-        .catch(function() {
-          prefetching.delete(fname);
-        });
-    }));
-    // Pauză 200ms între batch-uri ca să nu suprasolicite GAS
-    await new Promise(function(r) { setTimeout(r, 200); });
-  }
-}
-  
-async function fetchHTML(filename){
-  const url = GAS_URL+'?action=html&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
-  const res  = await fetch(url);
-  if(!res.ok) return null;
-  const text = await res.text();
-  let data;
-  try{ data = JSON.parse(text); } catch(e){ return null; }
-  if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return null; }
-  if(data.status!=='success') return null;
-  return data.html;
-}
-
-async function fetchPDF(filename, onProgress){
-  const url = GAS_URL+'?action=pdf&filename='+encodeURIComponent(filename)+'&token='+encodeURIComponent(sessionToken);
-  const res  = await fetch(url);
-  if(!res.ok) return null;
-
-  // Progres real via ReadableStream
-  const contentLength = res.headers.get('Content-Length');
-  const total = contentLength ? parseInt(contentLength) : 0;
-  const reader = res.body.getReader();
-  const chunks = [];
-  let received = 0;
-
-  while(true){
-    const {done, value} = await reader.read();
-    if(done) break;
-    chunks.push(value);
-    received += value.length;
-    if(onProgress && total > 0){
-      onProgress(Math.round((received / total) * 100));
-    } else if(onProgress) {
-      // Fără Content-Length — simulăm progres bazat pe bytes primiți
-      onProgress(Math.min(90, Math.round(received / 8000)));
-    }
-  }
-
-  // Asamblăm răspunsul
-  const allChunks = new Uint8Array(received);
-  let pos = 0;
-  for(const chunk of chunks){ allChunks.set(chunk, pos); pos += chunk.length; }
-  const text = new TextDecoder().decode(allChunks);
-
-  let data;
-  try{ data = JSON.parse(text); } catch(e){ return null; }
-  if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return null; }
-  if(data.status!=='success') return null;
-  if(onProgress) onProgress(100);
-  return data.base64;
-}
-
-async function previewCurrent(){
-  if(!currentFile) return;
-
-  // 1. Verifica cache in-memory (HTML string)
-  if(currentBlob){ showHtmlPreview(currentBlob); return; }
-
-  // 2. Verifica cache localStorage
-  const cached = loadFromCache(currentFile.name);
-  if(cached){
-    currentBlob = cached; // HTML string
-    showHtmlPreview(cached);
-    return;
-  }
-
-  // 3. Descarcă HTML de la GAS cu progress simulat
-  showPreviewState('loading');
+async function previewCurrent() {
+  if (!currentFile) return;
+  if (currentBlob) { showHtmlPreview(currentBlob, false); return; }
+  const cached = loadFromCache(currentFile.name, false);
+  if (cached) { currentBlob = cached; showHtmlPreview(cached, false); return; }
+  showPreviewState('loading', false);
   document.getElementById('previewProgress').textContent = currentFile.name;
   document.getElementById('previewProgressPct').textContent = '0%';
   document.getElementById('progressFill').style.width = '0%';
-
-  // HTML e mai mic decât PDF — progres mai rapid
   let simPct = 0;
-  const simInterval = setInterval(()=>{
-    const remaining = 85 - simPct;
-    simPct += remaining * 0.15;
+  const sim = setInterval(() => {
+    simPct += (85 - simPct) * 0.15;
     const pct = Math.round(simPct);
     document.getElementById('previewProgressPct').textContent = pct + '%';
     document.getElementById('progressFill').style.width = pct + '%';
   }, 100);
-
-  try{
-    const html = await fetchHTML(currentFile.name);
-    clearInterval(simInterval);
+  try {
+    const html = await fetchHTMLFor(currentFile.name, false);
+    clearInterval(sim);
     document.getElementById('previewProgressPct').textContent = '100%';
     document.getElementById('progressFill').style.width = '100%';
-
-    if(!html) throw new Error('Fișier HTML indisponibil');
-    saveToCache(currentFile.name, html);
-    currentBlob = html; // stocăm HTML string ca "blob"
-    showHtmlPreview(html);
-    filterFiles(); // refresh indicator ●
-  }catch(e){
-    clearInterval(simInterval);
-    showPreviewState('error');
-    document.getElementById('previewErrorMsg').textContent = 'Eroare: '+(e.message||'necunoscută');
+    if (!html) throw new Error('Fișier HTML indisponibil');
+    saveToCache(currentFile.name, html, false);
+    currentBlob = html;
+    showHtmlPreview(html, false);
+    filterFiles();
+  } catch(e) {
+    clearInterval(sim);
+    showPreviewState('error', false);
+    document.getElementById('previewErrorMsg').textContent = 'Eroare: ' + (e.message || 'necunoscută');
   }
 }
 
-function showPdfBlob(blob){
-  // Fallback pentru compatibilitate (neutilizat în fluxul principal)
-  const objUrl = URL.createObjectURL(blob);
-  const frame = document.getElementById('pdfFrame');
-  frame.src = objUrl;
-  frame.className = 'pdf-frame show';
-  showPreviewState(null);
-}
-
-function showHtmlPreview(html){
-  const frame = document.getElementById('pdfFrame');
+function showHtmlPreview(html, isTest) {
+  const frameId = isTest ? 'pdfFrameTest' : 'pdfFrame';
+  const frame   = document.getElementById(frameId);
+  const zoom    = isTest ? currentTestZoom : currentZoom;
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const file = isTest ? currentTestFile : currentFile;
 
-  if(isMobile){
-    // Pe mobil: blob URL deschis în filă nouă
-    const blob = new Blob([html], {type: 'text/html'});
+  if (isMobile) {
+    const blob   = new Blob([html], {type: 'text/html'});
     const objUrl = URL.createObjectURL(blob);
-    showPreviewState(null);
+    showPreviewState(null, isTest);
     frame.className = 'pdf-frame';
-    const notice = document.getElementById('previewEmpty');
+    const sfx    = isTest ? 'Test' : '';
+    const notice = document.getElementById('previewEmpty' + sfx);
     notice.style.display = 'flex';
     notice.innerHTML =
       '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
-      '<p style="margin-top:8px">' + (currentFile ? currentFile.name : '') + '</p>' +
+      '<p style="margin-top:8px">' + (file ? file.name : '') + '</p>' +
       '<a href="' + objUrl + '" target="_blank" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:500;">Deschide raportul</a>';
- } else {
-    const title = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
+  } else {
+    const title    = file ? file.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
     const titleTag = '<title>' + title + '</title>';
-    let htmlWithTitle = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, titleTag);
-    if(!htmlWithTitle.includes(titleTag)){
-      htmlWithTitle = htmlWithTitle.replace(/<head>/i, '<head>' + titleTag);
-    }
-    frame.srcdoc = htmlWithTitle;
+    let htmlT = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, titleTag);
+    if (!htmlT.includes(titleTag)) htmlT = htmlT.replace(/<head>/i, '<head>' + titleTag);
+    frame.srcdoc    = htmlT;
     frame.className = 'pdf-frame show';
-    showPreviewState(null);
-    // Fără onload — titlul e deja setat corect în srcdoc
-    // Aplică zoom curent dacă nu e 100%
-    if(currentZoom !== 100){
-      frame.onload = function(){
-        try{ frame.contentDocument.body.style.zoom = (currentZoom/100); }catch(e){}
+    showPreviewState(null, isTest);
+    if (zoom !== 100) {
+      frame.onload = function() {
+        try { frame.contentDocument.body.style.zoom = (zoom / 100); } catch(ex) {}
       };
     }
   }
 }
 
-function downloadCurrent(){
-  if(!currentFile) return;
-  const frame = document.getElementById('pdfFrame');
+function downloadCurrent() {
+  _doDownload(false);
+}
 
- const doPrint = function(){
-    try{
-      // Setează titlul paginii părinte temporar — Chrome îl folosește la print
-      const originalTitle = document.title;
-      const reportTitle = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : originalTitle;
-      document.title = reportTitle;
+function _doDownload(isTest) {
+  const frameId = isTest ? 'pdfFrameTest' : 'pdfFrame';
+  const frame   = document.getElementById(frameId);
+  const file    = isTest ? currentTestFile : currentFile;
+  const blob    = isTest ? currentTestBlob : currentBlob;
+  if (!file) return;
+  const doPrint = function() {
+    try {
+      const orig = document.title;
+      document.title = file.name.replace(/\.[^.]+$/, '');
       frame.contentWindow.focus();
       frame.contentWindow.print();
-      // Restaurează titlul original după print
-      setTimeout(function(){ document.title = originalTitle; }, 1000);
-    }catch(e){
-      // Fallback: deschide în filă nouă și printează
-      const html = currentBlob;
-      if(html && typeof html === 'string'){
-        const w = window.open('','_blank');
-        if(w){ w.document.write(html); w.document.close(); w.addEventListener('load',()=>{ setTimeout(()=>w.print(),300); }); }
+      setTimeout(function() { document.title = orig; }, 1000);
+    } catch(e) {
+      if (blob && typeof blob === 'string') {
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(blob); w.document.close(); w.addEventListener('load', () => setTimeout(() => w.print(), 300)); }
       }
     }
   };
-
-  if(currentBlob && frame.srcdoc){
-    // HTML deja încărcat în iframe
-    doPrint();
-  } else {
-    // Încarcă mai întâi, apoi printează
-    previewCurrent().then(()=>{
-      setTimeout(doPrint, 800);
-    });
+  if (blob && frame.srcdoc) { doPrint(); }
+  else {
+    const fn = isTest ? previewCurrentTest : previewCurrent;
+    fn().then(() => setTimeout(doPrint, 800));
   }
 }
 
-// ── CSV ──
-let csvData=[], csvHeaders=[], csvSortCol=-1, csvSortDir=1;
+// ── Cache helpers ──
+function getCacheKey(filename, isTest) { return (isTest ? LS_TEST_PREFIX : LS_PREFIX) + filename; }
 
-async function loadCsv(){
-  const wrap=document.getElementById('csvTableWrap');
-  const status=document.getElementById('csvStatus');
-  wrap.innerHTML='<div class="state-msg"><div class="spinner"></div><span>Se încarcă centralizatorul...</span></div>';
-  status.textContent='';
-  document.getElementById('csvCountBadge').textContent='';
-  try{
-    const res=await fetch(GAS_URL+'?action=csv&token='+encodeURIComponent(sessionToken));
-    const data=await res.json();
-    if(data.status==='error'&&data.message==='Neautorizat.'){ doLogout(); return; }
-    if(data.status!=='success') throw new Error(data.message||'Eroare server');
-    // Parsam CSV
+function isCached(filename, isTest) {
+  try { return !!localStorage.getItem(getCacheKey(filename, isTest)); } catch(e) { return false; }
+}
+
+function saveToCache(filename, content, isTest) {
+  try {
+    const key    = getCacheKey(filename, isTest);
+    const prefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
+    const sizeMB = (content.length * 0.75) / (1024 * 1024);
+    let totalMB = 0;
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.startsWith(prefix)) {
+        const v = localStorage.getItem(k);
+        totalMB += (v.length * 0.75) / (1024 * 1024);
+        keys.push({ k, size: (v.length * 0.75) / (1024 * 1024) });
+      }
+    }
+    while (totalMB + sizeMB > LS_MAX_MB && keys.length > 0) {
+      const oldest = keys.shift();
+      localStorage.removeItem(oldest.k);
+      totalMB -= oldest.size;
+    }
+    localStorage.setItem(key, content);
+  } catch(e) {}
+}
+
+function loadFromCache(filename, isTest) {
+  try { return localStorage.getItem(getCacheKey(filename, isTest)); } catch(e) { return null; }
+}
+
+// ── fetchHTML parametrizat ──
+async function fetchHTMLFor(filename, isTest) {
+  const folderParam = isTest ? '&folder=rapoarte_teste' : '';
+  const url = GAS_URL + '?action=html&filename=' + encodeURIComponent(filename) +
+              folderParam + '&token=' + encodeURIComponent(sessionToken);
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { return null; }
+  if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return null; }
+  if (data.status !== 'success') return null;
+  return data.html;
+}
+
+// ── Prefetch ──
+let prefetchTimer = null, prefetchTimerTest = null;
+let prefetching = new Set(), prefetchingTest = new Set();
+
+function prefetchOnHover(filename) {
+  if (isCached(filename, false) || prefetching.has(filename)) return;
+  clearTimeout(prefetchTimer);
+  prefetchTimer = setTimeout(() => {
+    if (!isCached(filename, false) && !prefetching.has(filename)) {
+      prefetching.add(filename);
+      fetchHTMLFor(filename, false).then(html => {
+        if (html) { saveToCache(filename, html, false); filterFiles(); }
+        prefetching.delete(filename);
+      }).catch(() => prefetching.delete(filename));
+    }
+  }, 300);
+}
+
+function prefetchOnHoverTest(filename) {
+  if (isCached(filename, true) || prefetchingTest.has(filename)) return;
+  clearTimeout(prefetchTimerTest);
+  prefetchTimerTest = setTimeout(() => {
+    if (!isCached(filename, true) && !prefetchingTest.has(filename)) {
+      prefetchingTest.add(filename);
+      fetchHTMLFor(filename, true).then(html => {
+        if (html) { saveToCache(filename, html, true); filterTeste(); }
+        prefetchingTest.delete(filename);
+      }).catch(() => prefetchingTest.delete(filename));
+    }
+  }, 300);
+}
+
+async function prefetchRecent(n, isTest) {
+  const src         = isTest ? allTestFiles : allFiles;
+  const pfSet       = isTest ? prefetchingTest : prefetching;
+  const toFetch     = src.filter(f => !isCached(f.name, isTest) && !pfSet.has(f.name)).slice(0, n);
+  if (!toFetch.length) return;
+  for (let i = 0; i < toFetch.length; i += 2) {
+    const batch = toFetch.slice(i, i + 2);
+    await Promise.all(batch.map(f => {
+      pfSet.add(f.name);
+      return fetchHTMLFor(f.name, isTest)
+        .then(html => {
+          if (html) { saveToCache(f.name, html, isTest); isTest ? filterTeste() : filterFiles(); }
+          pfSet.delete(f.name);
+        })
+        .catch(() => pfSet.delete(f.name));
+    }));
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RAPOARTE TESTE
+// ═══════════════════════════════════════════════
+async function loadTeste() {
+  try {
+    const res  = await fetch(GAS_URL + '?action=rapoarte&folder=rapoarte_teste&token=' + encodeURIComponent(sessionToken));
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
+    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
+    allTestFiles = data.files || [];
+    testeLoaded  = true;
+    // Actualizăm badge număr teste
+    const badge = document.getElementById('testeBadge');
+    if (allTestFiles.length > 0) {
+      badge.textContent = allTestFiles.length;
+      badge.style.display = 'inline';
+    }
+    document.getElementById('countBadgeTest').textContent = allTestFiles.length + ' teste';
+    filterTeste();
+    setTimeout(function() { prefetchRecent(3, true); }, 800);
+  } catch(e) {
+    document.getElementById('fileListTest').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele test.</span></div>';
+  }
+}
+
+function filterTeste() {
+  const q    = document.getElementById('searchInputTest').value.toLowerCase();
+  const sort = document.getElementById('sortSelectTest').value;
+  let list = allTestFiles.filter(f =>
+    (f.name||'').toLowerCase().includes(q) ||
+    (f.location||'').toLowerCase().includes(q) ||
+    (f.nr||'').toLowerCase().includes(q) ||
+    (f.date||'').includes(q)
+  );
+  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
+  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
+  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
+  else list.sort((a,b) => a.name.localeCompare(b.name));
+  document.getElementById('countBadgeTest').textContent = list.length + ' / ' + allTestFiles.length + ' teste';
+  renderList(list, true);
+}
+
+function selectTestFile(f) {
+  currentTestFile = f; currentTestBlob = null; currentTestZoom = 100;
+  document.getElementById('previewFilenameTest').textContent = f.name;
+  document.getElementById('previewFilenameTest').className = 'preview-filename';
+  document.getElementById('btnDownloadTest').disabled = false;
+  document.getElementById('btnZoomInTest').disabled = false;
+  document.getElementById('btnZoomOutTest').disabled = false;
+  document.getElementById('btnZoomResetTest').disabled = false;
+  document.getElementById('zoomLevelTest').textContent = '100%';
+  document.getElementById('statNameTest').textContent = f.nr || f.name;
+  document.getElementById('statDateTest').textContent = formatDate(f.date);
+  document.getElementById('statLocationTest').textContent = f.location || '—';
+  document.getElementById('statsBarTest').style.display = 'flex';
+  filterTeste();
+  previewCurrentTest();
+}
+
+function zoomPreviewTest(delta) {
+  const frame = document.getElementById('pdfFrameTest');
+  if (!frame.srcdoc && !frame.src) return;
+  if (delta === 0) { currentTestZoom = 100; }
+  else { currentTestZoom = Math.min(300, Math.max(50, currentTestZoom + delta)); }
+  document.getElementById('zoomLevelTest').textContent = currentTestZoom + '%';
+  try { const b = frame.contentDocument && frame.contentDocument.body; if (b) b.style.zoom = (currentTestZoom / 100); } catch(e) {}
+}
+
+async function previewCurrentTest() {
+  if (!currentTestFile) return;
+  if (currentTestBlob) { showHtmlPreview(currentTestBlob, true); return; }
+  const cached = loadFromCache(currentTestFile.name, true);
+  if (cached) { currentTestBlob = cached; showHtmlPreview(cached, true); return; }
+  showPreviewState('loading', true);
+  document.getElementById('previewProgressTest').textContent = currentTestFile.name;
+  document.getElementById('previewProgressPctTest').textContent = '0%';
+  document.getElementById('progressFillTest').style.width = '0%';
+  let simPct = 0;
+  const sim = setInterval(() => {
+    simPct += (85 - simPct) * 0.15;
+    const pct = Math.round(simPct);
+    document.getElementById('previewProgressPctTest').textContent = pct + '%';
+    document.getElementById('progressFillTest').style.width = pct + '%';
+  }, 100);
+  try {
+    const html = await fetchHTMLFor(currentTestFile.name, true);
+    clearInterval(sim);
+    document.getElementById('previewProgressPctTest').textContent = '100%';
+    document.getElementById('progressFillTest').style.width = '100%';
+    if (!html) throw new Error('Fișier HTML indisponibil');
+    saveToCache(currentTestFile.name, html, true);
+    currentTestBlob = html;
+    showHtmlPreview(html, true);
+    filterTeste();
+  } catch(e) {
+    clearInterval(sim);
+    showPreviewState('error', true);
+    document.getElementById('previewErrorMsgTest').textContent = 'Eroare: ' + (e.message || 'necunoscută');
+  }
+}
+
+function downloadCurrentTest() { _doDownload(true); }
+
+// ═══════════════════════════════════════════════
+// CSV NORMAL
+// ═══════════════════════════════════════════════
+async function loadCsv() {
+  await _loadCsvFor(false);
+}
+
+async function _loadCsvFor(isTest) {
+  const sfx      = isTest ? 'Test' : '';
+  const wrapId   = 'csvTableWrap' + sfx;
+  const statusId = 'csvStatus' + sfx;
+  const badgeId  = 'csvCountBadge' + sfx;
+  const expBtnId = 'btnExportCsv' + sfx;
+  const searchId = 'csvSearch' + sfx;
+
+  document.getElementById(wrapId).innerHTML   = '<div class="state-msg"><div class="spinner"></div><span>Se încarcă centralizatorul...</span></div>';
+  document.getElementById(statusId).textContent = '';
+  document.getElementById(badgeId).textContent  = '';
+
+  const folderParam = isTest ? '&folder=rapoarte_teste' : '';
+  try {
+    const res  = await fetch(GAS_URL + '?action=csv' + folderParam + '&token=' + encodeURIComponent(sessionToken));
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
+    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
     const rows = parseCSV(data.csv);
-    if(rows.length < 2){
-      wrap.innerHTML='<div class="state-msg"><span>Centralizatorul e gol.</span></div>';
+    if (rows.length < 2) {
+      document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span>Centralizatorul e gol.</span></div>';
       return;
     }
-    csvHeaders = rows[0];
-    csvData    = rows.slice(1);
-    csvLoaded  = true;
-    renderCsv(csvData);
-    status.textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
-    document.getElementById('csvCountBadge').textContent=csvData.length+' rânduri';
-    document.getElementById('btnExportCsv').disabled=false;
-  }catch(e){
-    wrap.innerHTML='<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: '+(e.message||'necunoscută')+'</span></div>';
+    if (isTest) {
+      csvTestHeaders = rows[0]; csvTestData = rows.slice(1);
+      csvTestLoaded  = true;
+      renderCsvFor(csvTestData, csvTestHeaders, isTest);
+      document.getElementById(statusId).textContent = csvTestData.length + ' înregistrări · ' + csvTestHeaders.length + ' coloane';
+      document.getElementById(badgeId).textContent  = csvTestData.length + ' rânduri';
+    } else {
+      csvHeaders = rows[0]; csvData = rows.slice(1);
+      csvLoaded  = true;
+      renderCsvFor(csvData, csvHeaders, isTest);
+      document.getElementById(statusId).textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
+      document.getElementById(badgeId).textContent  = csvData.length + ' rânduri';
+    }
+    document.getElementById(expBtnId).disabled = false;
+  } catch(e) {
+    document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: ' + (e.message||'necunoscută') + '</span></div>';
   }
 }
 
-function parseCSV(text){
-  const rows=[];
-  const lines=text.split('\n');
-  for(const line of lines){
-    if(!line.trim()) continue;
-    const cols=[];
-    let cur='', inQ=false;
-    for(let i=0;i<line.length;i++){
-      const c=line[i];
-      if(c==='"'){ if(inQ&&line[i+1]==='"'){ cur+='"'; i++; } else { inQ=!inQ; } }
-      else if(c===','&&!inQ){ cols.push(cur); cur=''; }
-      else { cur+=c; }
+async function loadCsvTest() { await _loadCsvFor(true); }
+
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else { inQ = !inQ; } }
+      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+      else { cur += c; }
     }
-    cols.push(cur);
-    rows.push(cols);
+    cols.push(cur); rows.push(cols);
   }
   return rows;
 }
 
-function filterCsv(){
-  const q=document.getElementById('csvSearch').value.toLowerCase();
-  const filtered=q?csvData.filter(row=>row.some(cell=>(cell||'').toLowerCase().includes(q))):csvData;
-  renderCsv(filtered);
-  document.getElementById('csvCountBadge').textContent=filtered.length+' / '+csvData.length+' rânduri';
+function filterCsv() {
+  const q        = document.getElementById('csvSearch').value.toLowerCase();
+  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  renderCsvFor(filtered, csvHeaders, false);
+  document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' rânduri';
 }
 
-function renderCsv(rows){
-  const wrap=document.getElementById('csvTableWrap');
-  if(!rows.length){
-    wrap.innerHTML='<div class="state-msg"><span>Niciun rezultat.</span></div>';
-    return;
-  }
-  // Afișăm primele 20 coloane pentru lizibilitate + scroll orizontal
-  const cols = csvHeaders;
-  let html='<table class="csv-table"><thead><tr>';
-  cols.forEach((h,i)=>{
-    const cls=csvSortCol===i?(csvSortDir===1?'sort-asc':'sort-desc'):'';
-    html+=`<th class="${cls}" onclick="sortCsv(${i})">${h}</th>`;
+function filterCsvTest() {
+  const q        = document.getElementById('csvSearchTest').value.toLowerCase();
+  const filtered = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
+  renderCsvFor(filtered, csvTestHeaders, true);
+  document.getElementById('csvCountBadgeTest').textContent = filtered.length + ' / ' + csvTestData.length + ' rânduri';
+}
+
+function renderCsvFor(rows, headers, isTest) {
+  const sfx  = isTest ? 'Test' : '';
+  const wrap = document.getElementById('csvTableWrap' + sfx);
+  const sortCol = isTest ? csvTestSortCol : csvSortCol;
+  const sortDir = isTest ? csvTestSortDir : csvSortDir;
+  if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>Niciun rezultat.</span></div>'; return; }
+  let html = '<table class="csv-table"><thead><tr>';
+  headers.forEach((h,i) => {
+    const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    html += `<th class="${cls}" onclick="sortCsvFor(${i},${isTest})">${h}</th>`;
   });
-  html+='</tr></thead><tbody>';
-  rows.forEach(row=>{
-    html+='<tr>';
-    cols.forEach((_,i)=>{
-      const val=row[i]||'';
-      let display=val;
-      if(val==='DA') display='<span class="badge-da">DA</span>';
-      else if(val==='NU') display='<span class="badge-nu">NU</span>';
-      else if(val==='N/A') display='<span class="badge-na">N/A</span>';
-      html+=`<td title="${val.replace(/"/g,'&quot;')}">${display}</td>`;
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    headers.forEach((_,i) => {
+      const val = row[i] || '';
+      let display = val;
+      if (val === 'DA') display = '<span class="badge-da">DA</span>';
+      else if (val === 'NU') display = '<span class="badge-nu">NU</span>';
+      else if (val === 'N/A') display = '<span class="badge-na">N/A</span>';
+      html += `<td title="${val.replace(/"/g,'&quot;')}">${display}</td>`;
     });
-    html+='</tr>';
+    html += '</tr>';
   });
-  html+='</tbody></table>';
-  wrap.innerHTML=html;
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
 }
 
-function sortCsv(colIdx){
-  if(csvSortCol===colIdx){ csvSortDir*=-1; } else { csvSortCol=colIdx; csvSortDir=1; }
-  const q=document.getElementById('csvSearch').value.toLowerCase();
-  let rows=q?csvData.filter(row=>row.some(cell=>(cell||'').toLowerCase().includes(q))):csvData;
-  rows=[...rows].sort((a,b)=>{
-    const av=a[colIdx]||'', bv=b[colIdx]||'';
-    return av.localeCompare(bv,undefined,{numeric:true})*csvSortDir;
-  });
-  renderCsv(rows);
-}
-
-function exportCsv(){
-  if(!csvHeaders.length || !csvData.length) return;
-  // Reconstruim CSV cu toate datele (nu cele filtrate)
-  function escVal(v){
-    const s = String(v||'').replace(/"/g,'""');
-    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"'+s+'"' : s;
+function sortCsvFor(colIdx, isTest) {
+  if (isTest) {
+    if (csvTestSortCol === colIdx) { csvTestSortDir *= -1; } else { csvTestSortCol = colIdx; csvTestSortDir = 1; }
+    const q   = document.getElementById('csvSearchTest').value.toLowerCase();
+    let rows  = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
+    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvTestSortDir);
+    renderCsvFor(rows, csvTestHeaders, true);
+  } else {
+    if (csvSortCol === colIdx) { csvSortDir *= -1; } else { csvSortCol = colIdx; csvSortDir = 1; }
+    const q   = document.getElementById('csvSearch').value.toLowerCase();
+    let rows  = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
+    renderCsvFor(rows, csvHeaders, false);
   }
-  const lines = [csvHeaders.map(escVal).join(',')];
-  csvData.forEach(row => lines.push(row.map(escVal).join(',')));
-  const csvText = lines.join('\n');
-  const blob = new Blob(['﻿'+csvText], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'centralizator_SSM_'+new Date().toISOString().slice(0,10)+'.csv';
+}
+
+function exportCsv(isTest) {
+  const headers = isTest ? csvTestHeaders : csvHeaders;
+  const data    = isTest ? csvTestData    : csvData;
+  if (!headers.length || !data.length) return;
+  function escVal(v) {
+    const s = String(v||'').replace(/"/g, '""');
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s + '"' : s;
+  }
+  const lines = [headers.map(escVal).join(',')];
+  data.forEach(row => lines.push(row.map(escVal).join(',')));
+  const blob = new Blob(['\uFEFF' + lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = (isTest ? 'centralizator_teste_' : 'centralizator_SSM_') + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
 </script>
