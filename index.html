@@ -78,6 +78,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 /* ── ZOOM ── */
 .btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
+.btn-back-mobile{display:none;}
 .zoom-level{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;min-width:36px;text-align:center;}
 .toolbar-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
 
@@ -171,9 +172,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 @media(max-width:680px){
   .rapoarte-layout{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
-  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0;max-height:45vh;}
-  .file-list{max-height:calc(45vh - 90px);}
-  .preview{flex:1;min-height:0;}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .file-list{flex:1;overflow-y:auto;}
+  .preview{display:none;flex:1;min-height:0;flex-direction:column;}
+  .preview.mobile-show{display:flex;}
+  .sidebar.mobile-hide{display:none;}
+  .btn-back-mobile{display:flex !important;}
   .topbar{padding:0 14px;}
   .csv-panel{flex-direction:column;}
   .tabs{padding:0 10px;}
@@ -263,6 +267,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       </div>
       <div class="preview" id="preview-rapoarte">
         <div class="preview-toolbar">
+          <button class="btn btn-back-mobile" onclick="mobileBackToList(false)" title="Înapoi la listă" style="margin-right:4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Listă
+          </button>
           <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
           <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează">−</button>
           <span class="zoom-level" id="zoomLevel">100%</span>
@@ -346,6 +354,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       </div>
       <div class="preview">
         <div class="preview-toolbar">
+          <button class="btn btn-back-mobile" onclick="mobileBackToList(true)" title="Înapoi la listă" style="margin-right:4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Listă
+          </button>
           <span class="preview-filename empty" id="previewFilenameTest">Selectează un raport test din listă</span>
           <button class="btn btn-icon" id="btnZoomOutTest" onclick="zoomPreviewTest(-25)" disabled title="Micșorează">−</button>
           <span class="zoom-level" id="zoomLevelTest">100%</span>
@@ -582,6 +594,7 @@ function selectFile(f) {
   document.getElementById('statLocation').textContent = f.location || '—';
   document.getElementById('statsBar').style.display = 'flex';
   filterFiles();
+  mobileShowPreview(false);
   previewCurrent();
 }
 
@@ -860,6 +873,7 @@ function selectTestFile(f) {
   document.getElementById('statLocationTest').textContent = f.location || '—';
   document.getElementById('statsBarTest').style.display = 'flex';
   filterTeste();
+  mobileShowPreview(true);
   previewCurrentTest();
 }
 
@@ -1030,6 +1044,32 @@ function sortCsvFor(colIdx, isTest) {
     rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
     renderCsvFor(rows, csvHeaders, false);
   }
+}
+
+// ── Mobile: show/hide list vs preview ──
+function isMobileView() { return window.innerWidth <= 680; }
+
+function mobileShowPreview(isTest) {
+  if (!isMobileView()) return;
+  const layout = isTest
+    ? document.querySelector('#content-teste .rapoarte-layout')
+    : document.querySelector('#content-rapoarte .rapoarte-layout');
+  if (!layout) return;
+  const sidebar = layout.querySelector('.sidebar');
+  const preview = layout.querySelector('.preview');
+  if (sidebar) sidebar.classList.add('mobile-hide');
+  if (preview) preview.classList.add('mobile-show');
+}
+
+function mobileBackToList(isTest) {
+  const layout = isTest
+    ? document.querySelector('#content-teste .rapoarte-layout')
+    : document.querySelector('#content-rapoarte .rapoarte-layout');
+  if (!layout) return;
+  const sidebar = layout.querySelector('.sidebar');
+  const preview = layout.querySelector('.preview');
+  if (sidebar) sidebar.classList.remove('mobile-hide');
+  if (preview) preview.classList.remove('mobile-show');
 }
 
 function exportCsv(isTest) {
