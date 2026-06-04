@@ -533,7 +533,8 @@ async function loadRapoarte() {
     setStatus('ok', allFiles.length + ' rapoarte');
     document.getElementById('countBadge').textContent = allFiles.length + ' rapoarte';
     filterFiles();
-    setTimeout(function() { prefetchRecent(3, false); }, 800);
+    setTimeout(function() { prefetchRecent(10, false); }, 800);
+    setTimeout(function() { prefetchAll(false); }, 3000);
   } catch(e) {
     setStatus('error', 'Eroare conexiune');
     document.getElementById('fileList').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele.</span></div>';
@@ -582,6 +583,7 @@ function renderList(files, isTest) {
     const hoverFn   = isTest ? 'prefetchOnHoverTest' : 'prefetchOnHover';
     return `<div class="file-item${testCls}${activeCls}"
       onclick="${onclickFn}(${JSON.stringify(f).replace(/"/g,'&quot;')})"
+      onpointerdown="${hoverFn}('${f.name.replace(/'/g,"\\'")}'")"
       onmouseenter="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
       <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div class="file-info">
@@ -797,36 +799,27 @@ let prefetching = new Set(), prefetchingTest = new Set();
 
 function prefetchOnHover(filename) {
   if (isCached(filename, false) || prefetching.has(filename)) return;
-  clearTimeout(prefetchTimer);
-  prefetchTimer = setTimeout(() => {
-    if (!isCached(filename, false) && !prefetching.has(filename)) {
-      prefetching.add(filename);
-      fetchHTMLFor(filename, false).then(html => {
-        if (html) { saveToCache(filename, html, false); filterFiles(); }
-        prefetching.delete(filename);
-      }).catch(() => prefetching.delete(filename));
-    }
-  }, 300);
+  // Fetch imediat — apelat și la pointerdown deci fără delay
+  prefetching.add(filename);
+  fetchHTMLFor(filename, false).then(html => {
+    if (html) { saveToCache(filename, html, false); filterFiles(); }
+    prefetching.delete(filename);
+  }).catch(() => prefetching.delete(filename));
 }
 
 function prefetchOnHoverTest(filename) {
   if (isCached(filename, true) || prefetchingTest.has(filename)) return;
-  clearTimeout(prefetchTimerTest);
-  prefetchTimerTest = setTimeout(() => {
-    if (!isCached(filename, true) && !prefetchingTest.has(filename)) {
-      prefetchingTest.add(filename);
-      fetchHTMLFor(filename, true).then(html => {
-        if (html) { saveToCache(filename, html, true); filterTeste(); }
-        prefetchingTest.delete(filename);
-      }).catch(() => prefetchingTest.delete(filename));
-    }
-  }, 300);
+  prefetchingTest.add(filename);
+  fetchHTMLFor(filename, true).then(html => {
+    if (html) { saveToCache(filename, html, true); filterTeste(); }
+    prefetchingTest.delete(filename);
+  }).catch(() => prefetchingTest.delete(filename));
 }
 
 async function prefetchRecent(n, isTest) {
-  const src         = isTest ? allTestFiles : allFiles;
-  const pfSet       = isTest ? prefetchingTest : prefetching;
-  const toFetch     = src.filter(f => !isCached(f.name, isTest) && !pfSet.has(f.name)).slice(0, n);
+  const src     = isTest ? allTestFiles : allFiles;
+  const pfSet   = isTest ? prefetchingTest : prefetching;
+  const toFetch = src.filter(f => !isCached(f.name, isTest) && !pfSet.has(f.name)).slice(0, n);
   if (!toFetch.length) return;
   for (let i = 0; i < toFetch.length; i += 2) {
     const batch = toFetch.slice(i, i + 2);
@@ -840,6 +833,28 @@ async function prefetchRecent(n, isTest) {
         .catch(() => pfSet.delete(f.name));
     }));
     await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+// ── Prefetch toate rapoartele în background, câte 2 în paralel ──
+async function prefetchAll(isTest) {
+  const src     = isTest ? allTestFiles : allFiles;
+  const pfSet   = isTest ? prefetchingTest : prefetching;
+  const toFetch = src.filter(f => !isCached(f.name, isTest) && !pfSet.has(f.name));
+  if (!toFetch.length) return;
+  for (let i = 0; i < toFetch.length; i += 2) {
+    const batch = toFetch.slice(i, i + 2);
+    await Promise.all(batch.map(f => {
+      pfSet.add(f.name);
+      return fetchHTMLFor(f.name, isTest)
+        .then(html => {
+          if (html) { saveToCache(f.name, html, isTest); isTest ? filterTeste() : filterFiles(); }
+          pfSet.delete(f.name);
+        })
+        .catch(() => pfSet.delete(f.name));
+    }));
+    // Pauză între batch-uri ca să nu supraîncărcăm GAS
+    await new Promise(r => setTimeout(r, 400));
   }
 }
 
@@ -862,7 +877,8 @@ async function loadTeste() {
     }
     document.getElementById('countBadgeTest').textContent = allTestFiles.length + ' teste';
     filterTeste();
-    setTimeout(function() { prefetchRecent(3, true); }, 800);
+    setTimeout(function() { prefetchRecent(10, true); }, 800);
+    setTimeout(function() { prefetchAll(true); }, 3000);
   } catch(e) {
     document.getElementById('fileListTest').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele test.</span></div>';
   }
