@@ -183,6 +183,21 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   .tabs{padding:0 10px;}
   .tab{padding:8px 12px;font-size:12px;}
 }
+
+/* ── MOBILE ACTION MODAL ── */
+.mob-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:flex-end;justify-content:center;}
+.mob-modal-overlay.show{display:flex;}
+.mob-modal{background:#fff;border-radius:16px 16px 0 0;padding:20px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 24px rgba(0,0,0,0.15);}
+.mob-modal-title{font-size:13px;font-weight:600;color:var(--text-muted);text-align:center;margin-bottom:4px;letter-spacing:0.04em;text-transform:uppercase;}
+.mob-modal-name{font-size:14px;font-weight:600;color:var(--text);text-align:center;margin-bottom:20px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mob-modal-actions{display:flex;flex-direction:column;gap:10px;}
+.mob-modal-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;color:var(--text);text-align:left;width:100%;}
+.mob-modal-btn:active{background:var(--accent-light);}
+.mob-modal-btn svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.mob-modal-btn-label{display:flex;flex-direction:column;}
+.mob-modal-btn-label span{font-size:11px;color:var(--text-muted);font-weight:400;margin-top:1px;}
+.mob-modal-cancel{margin-top:8px;width:100%;padding:13px;border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:10px;}
+.mob-modal-cancel:active{background:var(--surface2);}
 </style>
 </head>
 <body>
@@ -655,18 +670,12 @@ function showHtmlPreview(html, isTest) {
   const file = isTest ? currentTestFile : currentFile;
 
   if (isMobile) {
-    // Pe mobil: descărcăm HTML și deschidem direct într-un tab nou
+    // Pe mobil stocăm HTML-ul și deschidem modalul cu 2 opțiuni
+    window._mobHtml    = html;
+    window._mobIsTest  = isTest;
     var fname = file ? file.name : 'Raport';
-    if (confirm('Deschide raportul "' + fname + '" într-un tab nou?')) {
-      var blob   = new Blob([html], { type: 'text/html' });
-      var objUrl = URL.createObjectURL(blob);
-      var w = window.open(objUrl, '_blank');
-      if (!w) {
-        alert('Browserul a blocat deschiderea tab-ului. Permite popup-uri pentru acest site și încearcă din nou.');
-      }
-      setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
-    }
-    // Revenim la listă
+    document.getElementById('mobModalName').textContent = fname;
+    document.getElementById('mobModal').classList.add('show');
     mobileBackToList(isTest);
   } else {
     const title    = file ? file.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
@@ -1072,6 +1081,35 @@ function mobileBackToList(isTest) {
   if (preview) preview.classList.remove('mobile-show');
 }
 
+// ── Mobile modal ──
+function closeMobModal(e) {
+  if (e && e.target !== document.getElementById('mobModal')) return;
+  document.getElementById('mobModal').classList.remove('show');
+}
+
+function mobActionView() {
+  document.getElementById('mobModal').classList.remove('show');
+  if (!window._mobHtml) return;
+  var blob   = new Blob([window._mobHtml], { type: 'text/html' });
+  var objUrl = URL.createObjectURL(blob);
+  var w = window.open(objUrl, '_blank');
+  if (!w) alert('Permite popup-uri pentru acest site și încearcă din nou.');
+  setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
+}
+
+function mobActionDownload() {
+  document.getElementById('mobModal').classList.remove('show');
+  if (!window._mobHtml) return;
+  var blob   = new Blob([window._mobHtml], { type: 'text/html' });
+  var objUrl = URL.createObjectURL(blob);
+  var w = window.open(objUrl, '_blank');
+  if (!w) { alert('Permite popup-uri pentru acest site și încearcă din nou.'); return; }
+  w.addEventListener('load', function() {
+    setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
+  });
+  setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
+}
+
 function exportCsv(isTest) {
   const headers = isTest ? csvTestHeaders : csvHeaders;
   const data    = isTest ? csvTestData    : csvData;
@@ -1089,5 +1127,30 @@ function exportCsv(isTest) {
   a.click();
 }
 </script>
+
+<!-- ── MOBILE ACTION MODAL ── -->
+<div class="mob-modal-overlay" id="mobModal" onclick="closeMobModal(event)">
+  <div class="mob-modal">
+    <div class="mob-modal-title">Raport selectat</div>
+    <div class="mob-modal-name" id="mobModalName"></div>
+    <div class="mob-modal-actions">
+      <button class="mob-modal-btn" onclick="mobActionView()">
+        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="mob-modal-btn-label">
+          Vizualizare
+          <span>Deschide raportul într-un tab nou</span>
+        </div>
+      </button>
+      <button class="mob-modal-btn" onclick="mobActionDownload()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <div class="mob-modal-btn-label">
+          Descarcă
+          <span>Deschide dialogul de printare</span>
+        </div>
+      </button>
+    </div>
+    <button class="mob-modal-cancel" onclick="closeMobModal()">Anulează</button>
+  </div>
+</div>
 </body>
 </html>
