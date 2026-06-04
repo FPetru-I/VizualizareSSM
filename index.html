@@ -609,8 +609,25 @@ function selectFile(f) {
   document.getElementById('statLocation').textContent = f.location || '—';
   document.getElementById('statsBar').style.display = 'flex';
   filterFiles();
-  mobileShowPreview(false);
-  previewCurrent();
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    // Mobil: arătăm modalul imediat, descărcăm HTML în background
+    window._mobHtml   = null;
+    window._mobIsTest = false;
+    document.getElementById('mobModalName').textContent = f.name;
+    document.getElementById('mobModal').classList.add('show');
+    // Descărcare în background
+    var cached = loadFromCache(f.name, false);
+    if (cached) {
+      window._mobHtml = cached;
+    } else {
+      fetchHTMLFor(f.name, false).then(function(html) {
+        if (html) { saveToCache(f.name, html, false); window._mobHtml = html; }
+      });
+    }
+  } else {
+    mobileShowPreview(false);
+    previewCurrent();
+  }
 }
 
 function showPreviewState(state, isTest) {
@@ -882,8 +899,23 @@ function selectTestFile(f) {
   document.getElementById('statLocationTest').textContent = f.location || '—';
   document.getElementById('statsBarTest').style.display = 'flex';
   filterTeste();
-  mobileShowPreview(true);
-  previewCurrentTest();
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    window._mobHtml   = null;
+    window._mobIsTest = true;
+    document.getElementById('mobModalName').textContent = f.name;
+    document.getElementById('mobModal').classList.add('show');
+    var cached = loadFromCache(f.name, true);
+    if (cached) {
+      window._mobHtml = cached;
+    } else {
+      fetchHTMLFor(f.name, true).then(function(html) {
+        if (html) { saveToCache(f.name, html, true); window._mobHtml = html; }
+      });
+    }
+  } else {
+    mobileShowPreview(true);
+    previewCurrentTest();
+  }
 }
 
 function zoomPreviewTest(delta) {
@@ -1089,24 +1121,54 @@ function closeMobModal(e) {
 
 function mobActionView() {
   document.getElementById('mobModal').classList.remove('show');
-  if (!window._mobHtml) return;
-  var blob   = new Blob([window._mobHtml], { type: 'text/html' });
-  var objUrl = URL.createObjectURL(blob);
-  var w = window.open(objUrl, '_blank');
-  if (!w) alert('Permite popup-uri pentru acest site și încearcă din nou.');
-  setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
+  if (!window._mobHtml) {
+    // HTML încă se descarcă — așteptăm
+    var dots = 0;
+    var checking = setInterval(function() {
+      if (window._mobHtml) {
+        clearInterval(checking);
+        _mobOpenUrl(window._mobHtml, false);
+      } else {
+        dots = (dots + 1) % 4;
+        // reshow modal cu mesaj
+        document.getElementById('mobModalName').textContent = 'Se încarcă' + '.'.repeat(dots + 1);
+        document.getElementById('mobModal').classList.add('show');
+      }
+    }, 400);
+    return;
+  }
+  _mobOpenUrl(window._mobHtml, false);
 }
 
 function mobActionDownload() {
   document.getElementById('mobModal').classList.remove('show');
-  if (!window._mobHtml) return;
-  var blob   = new Blob([window._mobHtml], { type: 'text/html' });
+  if (!window._mobHtml) {
+    var dots = 0;
+    var checking = setInterval(function() {
+      if (window._mobHtml) {
+        clearInterval(checking);
+        _mobOpenUrl(window._mobHtml, true);
+      } else {
+        dots = (dots + 1) % 4;
+        document.getElementById('mobModalName').textContent = 'Se încarcă' + '.'.repeat(dots + 1);
+        document.getElementById('mobModal').classList.add('show');
+      }
+    }, 400);
+    return;
+  }
+  _mobOpenUrl(window._mobHtml, true);
+}
+
+function _mobOpenUrl(html, print) {
+  var blob   = new Blob([html], { type: 'text/html' });
   var objUrl = URL.createObjectURL(blob);
   var w = window.open(objUrl, '_blank');
   if (!w) { alert('Permite popup-uri pentru acest site și încearcă din nou.'); return; }
-  w.addEventListener('load', function() {
-    setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
-  });
+  if (print) {
+    w.addEventListener('load', function() {
+      setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
+    });
+  }
   setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
 }
 
@@ -1144,7 +1206,7 @@ function exportCsv(isTest) {
       <button class="mob-modal-btn" onclick="mobActionDownload()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <div class="mob-modal-btn-label">
-          Descarcă
+          Descarcă / Printează
           <span>Deschide dialogul de printare</span>
         </div>
       </button>
