@@ -576,24 +576,25 @@ function renderList(files, isTest) {
   }
   const lsPrefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
   el.innerHTML = files.map(f => {
-    const cached = isCached(f.name, isTest);
-    const testCls = isTest ? ' test-item' : '';
+    const cached    = isCached(f.name, isTest);
+    const testCls   = isTest ? ' test-item' : '';
     const activeCls = (active && active.name === f.name) ? ' active' : '';
     const onclickFn = isTest ? 'selectTestFile' : 'selectFile';
     const hoverFn   = isTest ? 'prefetchOnHoverTest' : 'prefetchOnHover';
-    return `<div class="file-item${testCls}${activeCls}"
-      onclick="${onclickFn}(${JSON.stringify(f).replace(/"/g,'&quot;')})"
-      onpointerdown="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
-      onmouseenter="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
-      <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-      <div class="file-info">
-        <div class="file-name">${f.name}${cached?' <span style="font-size:9px;color:var(--yes);font-family:inherit;">●</span>':''}</div>
-        <div class="file-meta">
-          <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDate(f.date)}</span>
-          ${f.location?`<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${f.location}</span>`:''}
-        </div>
-      </div>
-    </div>`;
+    const fJson     = JSON.stringify(f).replace(/"/g, '&quot;');
+    return '<div class="file-item' + testCls + activeCls + '"'
+      + ' data-fname="' + f.name.replace(/"/g, '&quot;') + '"'
+      + ' data-istest="' + (isTest ? '1' : '0') + '"'
+      + ' onclick="' + onclickFn + '(' + fJson + ')"'
+      + ' onpointerdown="handlePrefetchDown(this)"'
+      + ' onmouseenter="handlePrefetchDown(this)">'
+      + '<div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+      + '<div class="file-info">'
+      + '<div class="file-name">' + f.name + (cached ? ' <span style="font-size:9px;color:var(--yes);">●</span>' : '') + '</div>'
+      + '<div class="file-meta">'
+      + '<span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + formatDate(f.date) + '</span>'
+      + (f.location ? '<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + f.location + '</span>' : '')
+      + '</div></div></div>';
   }).join('');
 }
 
@@ -796,6 +797,13 @@ async function fetchHTMLFor(filename, isTest) {
 // ── Prefetch ──
 let prefetchTimer = null, prefetchTimerTest = null;
 let prefetching = new Set(), prefetchingTest = new Set();
+
+function handlePrefetchDown(el) {
+  var fname  = el.getAttribute('data-fname');
+  var isTest = el.getAttribute('data-istest') === '1';
+  if (isTest) prefetchOnHoverTest(fname);
+  else        prefetchOnHover(fname);
+}
 
 function prefetchOnHover(filename) {
   if (isCached(filename, false) || prefetching.has(filename)) return;
