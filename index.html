@@ -655,19 +655,37 @@ function showHtmlPreview(html, isTest) {
   const file = isTest ? currentTestFile : currentFile;
 
   if (isMobile) {
-    // Pe mobil folosim blob URL în iframe direct
-    const blob   = new Blob([html], { type: 'text/html' });
-    const objUrl = URL.createObjectURL(blob);
-    // Eliberăm URL-ul anterior dacă există
-    if (frame._blobUrl) { try { URL.revokeObjectURL(frame._blobUrl); } catch(ex) {} }
-    frame._blobUrl = objUrl;
-    frame.src       = objUrl;
-    frame.srcdoc    = '';
-    frame.className = 'pdf-frame show';
     showPreviewState(null, isTest);
-    frame.onload = function() {
-      try { frame.contentDocument.body.style.zoom = ((isTest ? currentTestZoom : currentZoom) / 100); } catch(ex) {}
-    };
+    var sfx   = isTest ? 'Test' : '';
+    var empty = document.getElementById('previewEmpty' + sfx);
+    empty.style.display = 'flex';
+    var blob = new Blob([html], { type: 'text/html' });
+    var objUrl = URL.createObjectURL(blob);
+    // Construim elementele DOM fără innerHTML cu ghilimele nested
+    while (empty.firstChild) empty.removeChild(empty.firstChild);
+    var iconWrap = document.createElement('div');
+    iconWrap.innerHTML = '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    var nameEl = document.createElement('p');
+    nameEl.style.cssText = 'font-size:13px;color:#6b6860;margin-top:8px;text-align:center;word-break:break-all;padding:0 12px;';
+    nameEl.textContent = file ? file.name : 'Raport';
+    var btn = document.createElement('a');
+    btn.href    = objUrl;
+    btn.target  = '_blank';
+    btn.rel     = 'noopener';
+    btn.style.cssText = 'margin-top:20px;padding:13px 32px;background:var(--accent);color:#fff;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600;display:inline-block;';
+    btn.textContent = 'Deschide raportul';
+    empty.appendChild(iconWrap);
+    empty.appendChild(nameEl);
+    empty.appendChild(btn);
+    // Afișăm preview, ascundem sidebar
+    var layoutSel = (isTest ? '#content-teste' : '#content-rapoarte') + ' .rapoarte-layout';
+    var layout = document.querySelector(layoutSel);
+    if (layout) {
+      var sb = layout.querySelector('.sidebar');
+      var pv = layout.querySelector('.preview');
+      if (sb) sb.classList.add('mobile-hide');
+      if (pv) pv.classList.add('mobile-show');
+    }
   } else {
     const title    = file ? file.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
     const titleTag = '<title>' + title + '</title>';
