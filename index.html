@@ -583,7 +583,7 @@ function renderList(files, isTest) {
     const hoverFn   = isTest ? 'prefetchOnHoverTest' : 'prefetchOnHover';
     return `<div class="file-item${testCls}${activeCls}"
       onclick="${onclickFn}(${JSON.stringify(f).replace(/"/g,'&quot;')})"
-      onpointerdown="${hoverFn}('${f.name.replace(/'/g,"\\'")}'")"
+      onpointerdown="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
       onmouseenter="${hoverFn}('${f.name.replace(/'/g,"\\'")}')">
       <div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div class="file-info">
