@@ -805,6 +805,232 @@ function handlePrefetchDown(el) {
 
 
 
+
+// ═══════════════════════════════════════════════
+// RAPOARTE TESTE
+// ═══════════════════════════════════════════════
+async function loadTeste() {
+  try {
+    const res  = await fetch(GAS_URL + '?action=rapoarte&folder=rapoarte_teste&token=' + encodeURIComponent(sessionToken));
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
+    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
+    allTestFiles = data.files || [];
+    testeLoaded  = true;
+    const badge = document.getElementById('testeBadge');
+    if (allTestFiles.length > 0) { badge.textContent = allTestFiles.length; badge.style.display = 'inline'; }
+    document.getElementById('countBadgeTest').textContent = allTestFiles.length + ' teste';
+    filterTeste();
+  } catch(e) {
+    document.getElementById('fileListTest').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele test.</span></div>';
+  }
+}
+
+function filterTeste() {
+  const q    = document.getElementById('searchInputTest').value.toLowerCase();
+  const sort = document.getElementById('sortSelectTest').value;
+  let list = allTestFiles.filter(f =>
+    (f.name||'').toLowerCase().includes(q) ||
+    (f.location||'').toLowerCase().includes(q) ||
+    (f.nr||'').toLowerCase().includes(q) ||
+    (f.date||'').includes(q)
+  );
+  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
+  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
+  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
+  else list.sort((a,b) => a.name.localeCompare(b.name));
+  document.getElementById('countBadgeTest').textContent = list.length + ' / ' + allTestFiles.length + ' teste';
+  renderList(list, true);
+}
+
+function selectTestFile(f) {
+  currentTestFile = f; currentTestBlob = null; currentTestZoom = 100;
+  document.getElementById('previewFilenameTest').textContent = f.name;
+  document.getElementById('previewFilenameTest').className = 'preview-filename';
+  document.getElementById('btnDownloadTest').disabled = false;
+  document.getElementById('btnZoomInTest').disabled = false;
+  document.getElementById('btnZoomOutTest').disabled = false;
+  document.getElementById('btnZoomResetTest').disabled = false;
+  document.getElementById('zoomLevelTest').textContent = '100%';
+  document.getElementById('statNameTest').textContent = f.nr || f.name;
+  document.getElementById('statDateTest').textContent = formatDate(f.date);
+  document.getElementById('statLocationTest').textContent = f.location || '—';
+  document.getElementById('statsBarTest').style.display = 'flex';
+  filterTeste();
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    window._mobHtml   = null;
+    window._mobIsTest = true;
+    document.getElementById('mobModalName').textContent = f.name;
+    document.getElementById('mobModal').classList.add('show');
+    var cached = loadFromCache(f.name, true);
+    if (cached) { window._mobHtml = cached; }
+    else { fetchHTMLFor(f.name, true).then(function(html) { if (html) { saveToCache(f.name, html, true); window._mobHtml = html; } }); }
+  } else {
+    mobileShowPreview(true);
+    previewCurrentTest();
+  }
+}
+
+function zoomPreviewTest(delta) {
+  const frame = document.getElementById('pdfFrameTest');
+  if (!frame.srcdoc && !frame.src) return;
+  if (delta === 0) { currentTestZoom = 100; }
+  else { currentTestZoom = Math.min(300, Math.max(50, currentTestZoom + delta)); }
+  document.getElementById('zoomLevelTest').textContent = currentTestZoom + '%';
+  try { const b = frame.contentDocument && frame.contentDocument.body; if (b) b.style.zoom = (currentTestZoom / 100); } catch(e) {}
+}
+
+async function previewCurrentTest() {
+  if (!currentTestFile) return;
+  if (currentTestBlob) { showHtmlPreview(currentTestBlob, true); return; }
+  const cached = loadFromCache(currentTestFile.name, true);
+  if (cached) { currentTestBlob = cached; showHtmlPreview(cached, true); return; }
+  showPreviewState('loading', true);
+  document.getElementById('previewProgressTest').textContent = currentTestFile.name;
+  document.getElementById('previewProgressPctTest').textContent = '0%';
+  document.getElementById('progressFillTest').style.width = '0%';
+  let simPct = 0;
+  const sim = setInterval(() => {
+    simPct += (85 - simPct) * 0.15;
+    const pct = Math.round(simPct);
+    document.getElementById('previewProgressPctTest').textContent = pct + '%';
+    document.getElementById('progressFillTest').style.width = pct + '%';
+  }, 100);
+  try {
+    const html = await fetchHTMLFor(currentTestFile.name, true);
+    clearInterval(sim);
+    document.getElementById('previewProgressPctTest').textContent = '100%';
+    document.getElementById('progressFillTest').style.width = '100%';
+    if (!html) throw new Error('Fișier HTML indisponibil');
+    saveToCache(currentTestFile.name, html, true);
+    currentTestBlob = html;
+    showHtmlPreview(html, true);
+    filterTeste();
+  } catch(e) {
+    clearInterval(sim);
+    showPreviewState('error', true);
+    document.getElementById('previewErrorMsgTest').textContent = 'Eroare: ' + (e.message || 'necunoscută');
+  }
+}
+
+function downloadCurrentTest() { _doDownload(true); }
+
+// ═══════════════════════════════════════════════
+// CSV NORMAL
+// ═══════════════════════════════════════════════
+async function loadCsv() { await _loadCsvFor(false); }
+async function loadCsvTest() { await _loadCsvFor(true); }
+
+async function _loadCsvFor(isTest) {
+  const sfx      = isTest ? 'Test' : '';
+  const wrapId   = 'csvTableWrap' + sfx;
+  const statusId = 'csvStatus' + sfx;
+  const badgeId  = 'csvCountBadge' + sfx;
+  const expBtnId = 'btnExportCsv' + (isTest ? 'Test' : '');
+  document.getElementById(wrapId).innerHTML = '<div class="state-msg"><div class="spinner"></div><span>Se încarcă centralizatorul...</span></div>';
+  document.getElementById(statusId).textContent = '';
+  document.getElementById(badgeId).textContent  = '';
+  const folderParam = isTest ? '&folder=rapoarte_teste' : '';
+  try {
+    const res  = await fetch(GAS_URL + '?action=csv' + folderParam + '&token=' + encodeURIComponent(sessionToken));
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
+    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
+    const rows = parseCSV(data.csv);
+    if (rows.length < 2) { document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span>Centralizatorul e gol.</span></div>'; return; }
+    if (isTest) {
+      csvTestHeaders = rows[0]; csvTestData = rows.slice(1);
+      csvTestLoaded  = true;
+      renderCsvFor(csvTestData, csvTestHeaders, true);
+      document.getElementById(statusId).textContent = csvTestData.length + ' înregistrări · ' + csvTestHeaders.length + ' coloane';
+      document.getElementById(badgeId).textContent  = csvTestData.length + ' rânduri';
+    } else {
+      csvHeaders = rows[0]; csvData = rows.slice(1);
+      csvLoaded  = true;
+      renderCsvFor(csvData, csvHeaders, false);
+      document.getElementById(statusId).textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
+      document.getElementById(badgeId).textContent  = csvData.length + ' rânduri';
+    }
+    document.getElementById(expBtnId).disabled = false;
+  } catch(e) {
+    document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: ' + (e.message||'necunoscută') + '</span></div>';
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else { inQ = !inQ; } }
+      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur); rows.push(cols);
+  }
+  return rows;
+}
+
+function filterCsv() {
+  const q        = document.getElementById('csvSearch').value.toLowerCase();
+  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  renderCsvFor(filtered, csvHeaders, false);
+  document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' rânduri';
+}
+
+function filterCsvTest() {
+  const q        = document.getElementById('csvSearchTest').value.toLowerCase();
+  const filtered = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
+  renderCsvFor(filtered, csvTestHeaders, true);
+  document.getElementById('csvCountBadgeTest').textContent = filtered.length + ' / ' + csvTestData.length + ' rânduri';
+}
+
+function renderCsvFor(rows, headers, isTest) {
+  const sfx      = isTest ? 'Test' : '';
+  const wrap     = document.getElementById('csvTableWrap' + sfx);
+  const sortCol  = isTest ? csvTestSortCol : csvSortCol;
+  const sortDir  = isTest ? csvTestSortDir : csvSortDir;
+  if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>Niciun rezultat.</span></div>'; return; }
+  let html = '<table class="csv-table"><thead><tr>';
+  headers.forEach((h,i) => {
+    const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    headers.forEach((_,i) => {
+      const val = row[i] || '';
+      let display = val;
+      if (val === 'DA') display = '<span class="badge-da">DA</span>';
+      else if (val === 'NU') display = '<span class="badge-nu">NU</span>';
+      else if (val === 'N/A') display = '<span class="badge-na">N/A</span>';
+      html += '<td title="' + val.replace(/"/g,'&quot;') + '">' + display + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function sortCsvFor(colIdx, isTest) {
+  if (isTest) {
+    if (csvTestSortCol === colIdx) { csvTestSortDir *= -1; } else { csvTestSortCol = colIdx; csvTestSortDir = 1; }
+    const q   = document.getElementById('csvSearchTest').value.toLowerCase();
+    let rows  = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
+    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvTestSortDir);
+    renderCsvFor(rows, csvTestHeaders, true);
+  } else {
+    if (csvSortCol === colIdx) { csvSortDir *= -1; } else { csvSortCol = colIdx; csvSortDir = 1; }
+    const q   = document.getElementById('csvSearch').value.toLowerCase();
+    let rows  = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
+    renderCsvFor(rows, csvHeaders, false);
+  }
+}
+
 // ── Mobile modal ──
 function closeMobModal(e) {
   if (e && e.target !== document.getElementById('mobModal')) return;
