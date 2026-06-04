@@ -74,7 +74,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 /* ── MAIN LAYOUT ── */
 .main{position:relative;flex:1;min-height:0;overflow:hidden;}
-.rapoarte-layout{width:100%;height:100%;display:flex;overflow:hidden;}
+.rapoarte-layout{width:100%;height:100%;display:flex;overflow:hidden;flex:1;min-height:0;}
 
 /* ── ZOOM ── */
 .btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
@@ -142,7 +142,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .stats-bar svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── CSV TAB ── */
-.csv-panel{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.csv-panel{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0;}
 .csv-toolbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .csv-search{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
 .csv-search:focus{border-color:var(--accent);}
@@ -170,11 +170,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .pdf-progress-pct{font-size:12px;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-weight:600;}
 
 @media(max-width:680px){
-  .rapoarte-layout{width:100%;height:100%;display:flex;overflow:hidden;}
-  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}
-  .file-list{max-height:260px;}
-  .preview{height:50vh;}
+  .rapoarte-layout{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0;max-height:45vh;}
+  .file-list{max-height:calc(45vh - 90px);}
+  .preview{flex:1;min-height:0;}
   .topbar{padding:0 14px;}
+  .csv-panel{flex-direction:column;}
+  .tabs{padding:0 10px;}
+  .tab{padding:8px 12px;font-size:12px;}
 }
 </style>
 </head>
@@ -639,17 +642,19 @@ function showHtmlPreview(html, isTest) {
   const file = isTest ? currentTestFile : currentFile;
 
   if (isMobile) {
-    const blob   = new Blob([html], {type: 'text/html'});
+    // Pe mobil folosim blob URL în iframe direct
+    const blob   = new Blob([html], { type: 'text/html' });
     const objUrl = URL.createObjectURL(blob);
+    // Eliberăm URL-ul anterior dacă există
+    if (frame._blobUrl) { try { URL.revokeObjectURL(frame._blobUrl); } catch(ex) {} }
+    frame._blobUrl = objUrl;
+    frame.src       = objUrl;
+    frame.srcdoc    = '';
+    frame.className = 'pdf-frame show';
     showPreviewState(null, isTest);
-    frame.className = 'pdf-frame';
-    const sfx    = isTest ? 'Test' : '';
-    const notice = document.getElementById('previewEmpty' + sfx);
-    notice.style.display = 'flex';
-    notice.innerHTML =
-      '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
-      '<p style="margin-top:8px">' + (file ? file.name : '') + '</p>' +
-      '<a href="' + objUrl + '" target="_blank" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:500;">Deschide raportul</a>';
+    frame.onload = function() {
+      try { frame.contentDocument.body.style.zoom = ((isTest ? currentTestZoom : currentZoom) / 100); } catch(ex) {}
+    };
   } else {
     const title    = file ? file.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
     const titleTag = '<title>' + title + '</title>';
