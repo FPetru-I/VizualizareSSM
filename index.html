@@ -275,6 +275,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             </select>
             <span class="count-badge" id="countBadge">— rapoarte</span>
           </div>
+          <div class="toolbar-row">
+            <select class="sort-select" id="versionFilter" onchange="filterFiles()">
+              <option value="">Toate versiunile</option>
+            </select>
+          </div>
         </div>
         <div class="file-list" id="fileList">
           <div class="state-msg"><div class="spinner"></div><span>Se încarcă...</span></div>
@@ -549,21 +554,16 @@ function setStatus(type, label) {
 function formatDate(d) { if (!d) return '—'; const p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
 
 function filterFiles() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-  const sort = document.getElementById('sortSelect').value;
+  const q       = document.getElementById('searchInput').value.toLowerCase();
+  const sort    = document.getElementById('sortSelect').value;
+  const version = document.getElementById('versionFilter') ? document.getElementById('versionFilter').value : '';
   let list = allFiles.filter(f =>
-    (f.name||'').toLowerCase().includes(q) ||
+    ((f.name||'').toLowerCase().includes(q) ||
     (f.location||'').toLowerCase().includes(q) ||
     (f.nr||'').toLowerCase().includes(q) ||
-    (f.date||'').includes(q)
+    (f.date||'').includes(q)) &&
+    (!version || f.version === version)
   );
-  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
-  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
-  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
-  else list.sort((a,b) => a.name.localeCompare(b.name));
-  document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
-  renderList(list, false);
-}
 
 function renderList(files, isTest) {
   const elId   = isTest ? 'fileListTest' : 'fileList';
@@ -653,6 +653,10 @@ async function previewCurrent() {
   if (currentBlob) { showHtmlPreview(currentBlob, false); return; }
   const cached = loadFromCache(currentFile.name, false);
   if (cached) { currentBlob = cached; showHtmlPreview(cached, false); return; }
+  if (!currentFile.version) {
+    const cached2 = loadFromCache(currentFile.name, false);
+    if (cached2) { extractAndStoreVersion(currentFile.name, cached2); updateVersionFilter(); }
+  }
   showPreviewState('loading', false);
   document.getElementById('previewProgress').textContent = currentFile.name;
   document.getElementById('previewProgressPct').textContent = '0%';
@@ -671,6 +675,8 @@ async function previewCurrent() {
     document.getElementById('progressFill').style.width = '100%';
     if (!html) throw new Error('Fișier HTML indisponibil');
     saveToCache(currentFile.name, html, false);
+    extractAndStoreVersion(currentFile.name, html);
+    updateVersionFilter();
     currentBlob = html;
     showHtmlPreview(html, false);
     filterFiles();
@@ -793,6 +799,29 @@ async function fetchHTMLFor(filename, isTest) {
   return data.html;
 }
 
+// ── Versiuni formular ──
+function extractAndStoreVersion(filename, html) {
+  var match = html.match(/<meta name="form-version" content="([^"]+)"/);
+  var version = match ? match[1] : 'necunoscută';
+  var f = allFiles.find(function(x) { return x.name === filename; });
+  if (f) f.version = version;
+}
+
+function updateVersionFilter() {
+  var sel = document.getElementById('versionFilter');
+  if (!sel) return;
+  var versions = new Set();
+  allFiles.forEach(function(f) { if (f.version) versions.add(f.version); });
+  var current = sel.value;
+  sel.innerHTML = '<option value="">Toate versiunile</option>';
+  Array.from(versions).sort().forEach(function(v) {
+    var opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    if (v === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+  
 // ── Prefetch ──
 let prefetching = new Set(), prefetchingTest = new Set();
 
