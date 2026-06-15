@@ -248,11 +248,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             <input class="search-input" type="text" id="searchInput" placeholder="Caută după număr, localitate, dată..." oninput="filterFiles()"/>
           </div>
           <div class="toolbar-row">
-            <select class="sort-select" id="sortSelect" onchange="filterFiles()">
-              <option value="newest">Cele mai noi întâi</option>
-              <option value="oldest">Cele mai vechi întâi</option>
-              <option value="name">Alfabetic</option>
-            </select>
+        <select class="sort-select" id="sortSelect" onchange="filterFiles()">
+            <option value="nr_asc" selected>Număr crescător</option>
+            <option value="newest">Cele mai noi întâi</option>
+            <option value="oldest">Cele mai vechi întâi</option>
+            <option value="name">Alfabetic</option>
+        </select>
             <span class="count-badge" id="countBadge">— rapoarte</span>
           </div>
         </div>
@@ -445,14 +446,17 @@ function formatDate(d) { if (!d) return '—'; const p = d.split('-'); return p.
 function filterFiles() {
   const q    = document.getElementById('searchInput').value.toLowerCase();
   const sort = document.getElementById('sortSelect').value;
-  let list = allFiles.filter(f =>
-    (f.name||'').toLowerCase().includes(q) ||
-    (f.location||'').toLowerCase().includes(q) ||
-    (f.nr||'').toLowerCase().includes(q) ||
-    (f.date||'').includes(q)
-  );
+  let list = allFiles.filter(f => {
+    var nr = parseInt((f.nr||'').replace(/[^0-9]/g,''));
+    if (!isNaN(nr) && nr < 91) return false;
+    return (f.name||'').toLowerCase().includes(q) ||
+           (f.location||'').toLowerCase().includes(q) ||
+           (f.nr||'').toLowerCase().includes(q) ||
+           (f.date||'').includes(q);
+  });
   const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
-  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
+  if (sort === 'nr_asc') list.sort((a,b) => getNr(a) - getNr(b));
+  else if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
   else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
   else list.sort((a,b) => a.name.localeCompare(b.name));
   document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
