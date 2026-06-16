@@ -63,6 +63,15 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .tab-content.active{display:flex !important;position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;}
 .tab-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--test-bg);color:var(--test);border:1px solid var(--test-border);}
 
+/* ── TEST FILE ITEM ── */
+.file-item.test-item .file-icon{background:var(--test-bg);}
+.file-item.test-item .file-icon svg{stroke:var(--test);}
+.file-item.test-item.active .file-icon{background:var(--test);}
+.file-item.test-item.active .file-icon svg{stroke:#fff;}
+.file-item.test-item{border-color:var(--test-border)!important;}
+.file-item.test-item:hover{background:var(--test-bg);border-color:var(--test)!important;}
+.file-item.test-item.active{background:var(--test-bg);border-color:var(--test)!important;box-shadow:inset 0 0 0 1px var(--test);}
+
 /* ── MAIN LAYOUT ── */
 .main{position:relative;flex:1;min-height:0;overflow:hidden;}
 .rapoarte-layout{width:100%;height:100%;display:flex;overflow:hidden;flex:1;min-height:0;}
@@ -189,6 +198,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .mob-modal-btn-label span{font-size:11px;color:var(--text-muted);font-weight:400;margin-top:1px;}
 .mob-modal-cancel{margin-top:8px;width:100%;padding:13px;border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:10px;}
 .mob-modal-cancel:active{background:var(--surface2);}
+
+  /* ── LANGUAGE SWITCHER ── */
+  .lang-switcher{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,0.12);border-radius:20px;padding:3px;margin-right:4px;}
+  .lang-btn{padding:3px 10px;border-radius:16px;border:none;background:transparent;color:rgba(255,255,255,0.7);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.06em;transition:all 0.15s;}
+  .lang-btn.active{background:#fff;color:var(--accent);}
+  .lang-btn:hover:not(.active){color:#fff;}
 </style>
 </head>
 <body>
@@ -198,11 +213,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <div><div class="login-title">Rapoarte SSM</div><div class="login-sub">Bază de date centralizată</div></div>
+      <div><div class="login-title" data-i18n="app_title">Rapoarte SSM</div><div class="login-sub" data-i18n="app_sub">Bază de date centralizată</div></div>
     </div>
-    <label class="login-label" for="passwordInput">Parolă de acces</label>
-    <input class="login-input" type="password" id="passwordInput" placeholder="Introduceți parola..." onkeydown="if(event.key==='Enter') doLogin()"/>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Intră</button>
+    <label class="login-label" for="passwordInput" data-i18n="login_label">Parolă de acces</label>
+    <input class="login-input" type="password" id="passwordInput" placeholder="Introduceți parola..." data-i18n-placeholder="login_placeholder" onkeydown="if(event.key==='Enter') doLogin()"/>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()" data-i18n="login_btn">Intră</button>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
@@ -212,12 +227,16 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="topbar">
     <div class="topbar-left">
       <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <div><div class="topbar-title">Rapoarte SSM</div><div class="topbar-sub">Bază de date centralizată</div></div>
+      <div><div class="topbar-title" data-i18n="app_title">Rapoarte SSM</div><div class="topbar-sub" data-i18n="app_sub">Bază de date centralizată</div></div>
     </div>
     <div class="topbar-right">
+      <div class="lang-switcher">
+        <button class="lang-btn active" id="btnLangRo" onclick="setLang('ro')">RO</button>
+        <button class="lang-btn" id="btnLangEn" onclick="setLang('en')">EN</button>
+      </div>
       <div class="status-pill"><div class="status-dot loading" id="statusDot"></div><span id="statusLabel">Se conectează...</span></div>
       <button class="logout-btn" onclick="doLogout()">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg data-i18n="logout">
         Ieși
       </button>
     </div>
@@ -227,12 +246,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="tabs">
     <!-- Rapoarte -->
     <div class="tab active" id="tab-rapoarte" onclick="switchTab('rapoarte')">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg data-i18n="tab_rapoarte">
       Rapoarte
     </div>
     <!-- CSV Normal -->
     <div class="tab" id="tab-csv" onclick="switchTab('csv')">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg data-i18n="tab_csv">
       Centralizator
     </div>
   </div>
@@ -245,15 +264,15 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <div class="sidebar-toolbar">
           <div class="search-wrap">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="search-input" type="text" id="searchInput" placeholder="Caută după număr, localitate, dată..." oninput="filterFiles()"/>
+            <input class="search-input" type="text" id="searchInput" placeholder="Caută după număr, localitate, dată..." data-i18n-placeholder="search_placeholder" oninput="filterFiles()"/>
           </div>
           <div class="toolbar-row">
-        <select class="sort-select" id="sortSelect" onchange="filterFiles()">
-            <option value="nr_asc" selected>Număr crescător</option>
-            <option value="newest">Cele mai noi întâi</option>
-            <option value="oldest">Cele mai vechi întâi</option>
-            <option value="name">Alfabetic</option>
-        </select>
+            <select class="sort-select" id="sortSelect" onchange="filterFiles()">
+              <option value="nr_asc" selected>Număr crescător</option>
+              <option value="newest" data-i18n="sort_newest">Cele mai noi întâi</option>
+              <option value="oldest" data-i18n="sort_oldest">Cele mai vechi întâi</option>
+              <option value="name" data-i18n="sort_alpha">Alfabetic</option>
+            </select>
             <span class="count-badge" id="countBadge">— rapoarte</span>
           </div>
         </div>
@@ -267,33 +286,33 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Listă
           </button>
-          <span class="preview-filename empty" id="previewFilename">Selectează un raport din listă</span>
-          <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează">−</button>
+          <span class="preview-filename empty" id="previewFilename" data-i18n="select_report">Selectează un raport din listă</span>
+          <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează" data-i18n-title="zoom_minus">−</button>
           <span class="zoom-level" id="zoomLevel">100%</span>
-          <button class="btn btn-icon" id="btnZoomIn" onclick="zoomPreview(25)" disabled title="Mărește">+</button>
-          <button class="btn btn-icon" id="btnZoomReset" onclick="zoomPreview(0)" disabled title="Reset zoom" style="font-size:11px;">↺</button>
+          <button class="btn btn-icon" id="btnZoomIn" onclick="zoomPreview(25)" disabled title="Mărește" data-i18n-title="zoom_plus">+</button>
+          <button class="btn btn-icon" id="btnZoomReset" onclick="zoomPreview(0)" disabled title="Reset zoom" data-i18n-title="zoom_reset" style="font-size:11px;">↺</button>
           <div class="toolbar-divider"></div>
           <button class="btn" id="btnDownload" disabled onclick="downloadCurrent()">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Descarcă
+            <span data-i18n="download">Descarcă</span>
           </button>
         </div>
         <div class="preview-body">
           <div class="preview-empty" id="previewEmpty">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <p>Selectează un raport din listă pentru a-l vizualiza.</p>
+            <p data-i18n="select_report_msg">Selectează un raport din listă pentru a-l vizualiza.</p>
           </div>
           <div class="preview-loading" id="previewLoading">
             <div class="spinner"></div>
-            <span>Se încarcă raportul...</span>
+            <span data-i18n="loading_report">Se încarcă raportul...</span>
             <span class="pdf-progress-pct" id="previewProgressPct"></span>
             <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="progressFill"></div></div>
             <span class="preview-progress" id="previewProgress"></span>
           </div>
           <div class="preview-error" id="previewError">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="previewErrorMsg">Eroare la încărcarea raportului.</span>
-            <button class="btn" onclick="previewCurrent()">Încearcă din nou</button>
+            <span id="previewErrorMsg" data-i18n="report_error">Eroare la încărcarea raportului.</span>
+            <button class="btn" onclick="previewCurrent()" data-i18n="retry">Încearcă din nou</button>
           </div>
           <iframe class="pdf-frame" id="pdfFrame" title="Previzualizare raport"></iframe>
         </div>
@@ -301,6 +320,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span id="statName">—</span></span>
           <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="statDate">—</span></span>
           <span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="statLocation">—</span></span>
+          <span><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span id="statLocatie">—</span></span>
         </div>
       </div>
     </div>
@@ -309,25 +329,25 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="tab-content" id="content-csv">
       <div class="csv-panel">
         <div class="csv-toolbar">
-          <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." oninput="filterCsv()"/>
+          <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." data-i18n-placeholder="csv_search" oninput="filterCsv()"/>
           <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
-            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg data-i18n="reload">
             Reîncarcă
           </button>
           <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv(false)" disabled>
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg data-i18n="export_csv">
             Export CSV
           </button>
           <span class="count-badge" id="csvCountBadge"></span>
         </div>
         <div class="csv-table-wrap" id="csvTableWrap">
-          <div class="state-msg"><span style="color:var(--text-faint)">Apasă tab-ul pentru a încărca datele.</span></div>
+          <div class="state-msg"><span style="color:var(--text-faint)" data-i18n="csv_load_prompt">Apasă tab-ul pentru a încărca datele.</span></div>
         </div>
         <div class="csv-status" id="csvStatus"></div>
       </div>
     </div>
+    </div>
 
-    
   </div>
 </div>
 
@@ -359,6 +379,8 @@ const LS_MAX_MB = 4;
   var storedToken = sessionStorage.getItem('ssm_token');
   if (storedToken) { sessionToken = storedToken; showApp(); loadRapoarte(); }
   else { showLogin(); }
+  // Apply saved language after DOM is ready
+  setTimeout(applyLang, 0);
 })();
 
 function showLogin() {
@@ -418,20 +440,20 @@ function switchTab(tab) {
 // RAPOARTE NORMALE
 // ═══════════════════════════════════════════════
 async function loadRapoarte() {
-  setStatus('loading', 'Se conectează...');
+  setStatus('loading', t('connecting'));
   try {
     const res  = await fetch(GAS_URL + '?action=rapoarte&token=' + encodeURIComponent(sessionToken));
     const data = await res.json();
     if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
     if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
     allFiles = data.files || [];
-    setStatus('ok', allFiles.length + ' rapoarte');
-    document.getElementById('countBadge').textContent = allFiles.length + ' rapoarte';
+    setStatus('ok', allFiles.length + ' ' + t('reports'));
+    document.getElementById('countBadge').textContent = allFiles.length + ' ' + t('reports');
     filterFiles();
 
   } catch(e) {
-    setStatus('error', 'Eroare conexiune');
-    document.getElementById('fileList').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele.</span></div>';
+    setStatus('error', currentLang === 'en' ? 'Connection error' : 'Eroare conexiune');
+    document.getElementById('fileList').innerHTML = '<div class="state-msg"><span style="color:#c0392b">' + t('load_error') + '</span></div>';
   }
 }
 
@@ -462,13 +484,12 @@ function filterFiles() {
   document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
   renderList(list, false);
 }
-
 function renderList(files, isTest) {
   const elId   = isTest ? 'fileListTest' : 'fileList';
   const el     = document.getElementById(elId);
   const active = isTest ? currentTestFile : currentFile;
   if (!files.length) {
-    el.innerHTML = '<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Niciun raport găsit.</span></div>';
+    el.innerHTML = '<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>' + t('no_reports') + '</span></div>';
     return;
   }
   const lsPrefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
@@ -491,6 +512,7 @@ function renderList(files, isTest) {
       + '<div class="file-meta">'
       + '<span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + formatDate(f.date) + '</span>'
       + (f.location ? '<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + f.location + '</span>' : '')
+      + (f.locatie ? '<span><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' + f.locatie + '</span>' : '')
       + '</div></div></div>';
   }).join('');
 }
@@ -507,6 +529,7 @@ function selectFile(f) {
   document.getElementById('statName').textContent = f.nr || f.name;
   document.getElementById('statDate').textContent = formatDate(f.date);
   document.getElementById('statLocation').textContent = f.location || '—';
+  document.getElementById('statLocatie').textContent = f.locatie || '—';
   document.getElementById('statsBar').style.display = 'flex';
   filterFiles();
   if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -825,7 +848,7 @@ async function _loadCsvFor(isTest) {
   const statusId = 'csvStatus' + sfx;
   const badgeId  = 'csvCountBadge' + sfx;
   const expBtnId = 'btnExportCsv' + (isTest ? 'Test' : '');
-  document.getElementById(wrapId).innerHTML = '<div class="state-msg"><div class="spinner"></div><span>Se încarcă centralizatorul...</span></div>';
+  document.getElementById(wrapId).innerHTML = '<div class="state-msg"><div class="spinner"></div><span>' + t('loading_csv') + '</span></div>';
   document.getElementById(statusId).textContent = '';
   document.getElementById(badgeId).textContent  = '';
   const folderParam = isTest ? '&folder=rapoarte_teste' : '';
@@ -835,7 +858,7 @@ async function _loadCsvFor(isTest) {
     if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
     if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
     const rows = parseCSV(data.csv);
-    if (rows.length < 2) { document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span>Centralizatorul e gol.</span></div>'; return; }
+    if (rows.length < 2) { document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span>' + t('csv_empty') + '</span></div>'; return; }
     if (isTest) {
       csvTestHeaders = rows[0]; csvTestData = rows.slice(1);
       csvTestLoaded  = true;
@@ -846,8 +869,8 @@ async function _loadCsvFor(isTest) {
       csvHeaders = rows[0]; csvData = rows.slice(1);
       csvLoaded  = true;
       renderCsvFor(csvData, csvHeaders, false);
-      document.getElementById(statusId).textContent = csvData.length + ' înregistrări · ' + csvHeaders.length + ' coloane';
-      document.getElementById(badgeId).textContent  = csvData.length + ' rânduri';
+      document.getElementById(statusId).textContent = csvData.length + ' ' + t('records') + ' · ' + csvHeaders.length + ' ' + t('columns');
+      document.getElementById(badgeId).textContent  = csvData.length + ' ' + t('rows');
     }
     document.getElementById(expBtnId).disabled = false;
   } catch(e) {
@@ -875,7 +898,7 @@ function filterCsv() {
   const q        = document.getElementById('csvSearch').value.toLowerCase();
   const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
   renderCsvFor(filtered, csvHeaders, false);
-  document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' rânduri';
+  document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' ' + t('rows');
 }
 
 function filterCsvTest() {
@@ -890,7 +913,7 @@ function renderCsvFor(rows, headers, isTest) {
   const wrap     = document.getElementById('csvTableWrap' + sfx);
   const sortCol  = isTest ? csvTestSortCol : csvSortCol;
   const sortDir  = isTest ? csvTestSortDir : csvSortDir;
-  if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>Niciun rezultat.</span></div>'; return; }
+  if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>' + (currentLang === 'en' ? 'No results.' : 'Niciun rezultat.') + '</span></div>'; return; }
   let html = '<table class="csv-table"><thead><tr>';
   headers.forEach((h,i) => {
     const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
@@ -1031,12 +1054,148 @@ function exportCsv(isTest) {
   a.download = (isTest ? 'centralizator_teste_' : 'centralizator_SSM_') + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
+
+// ── INTERNATIONALIZATION ──
+const I18N = {
+  ro: {
+    app_title: 'Rapoarte SSM',
+    app_sub: 'Bază de date centralizată',
+    login_label: 'Parolă de acces',
+    login_placeholder: 'Introduceți parola...',
+    login_btn: 'Intră',
+    connecting: 'Se conectează...',
+    logout: 'Ieși',
+    tab_rapoarte: 'Rapoarte',
+    tab_csv: 'Centralizator',
+    search_placeholder: 'Caută după număr, localitate, dată...',
+    sort_newest: 'Cele mai noi întâi',
+    sort_oldest: 'Cele mai vechi întâi',
+    sort_alpha: 'Alfabetic',
+    select_report: 'Selectează un raport din listă',
+    zoom_minus: 'Micșorează',
+    zoom_plus: 'Mărește',
+    zoom_reset: 'Reset zoom',
+    download: 'Descarcă',
+    loading_report: 'Se încarcă raportul...',
+    report_error: 'Eroare la încărcarea raportului.',
+    retry: 'Încearcă din nou',
+    select_report_msg: 'Selectează un raport din listă pentru a-l vizualiza.',
+    csv_search: 'Caută în toate coloanele...',
+    reload: 'Reîncarcă',
+    export_csv: 'Export CSV',
+    loading_csv: 'Se încarcă centralizatorul...',
+    csv_empty: 'Centralizatorul e gol.',
+    csv_load_prompt: 'Apasă tab-ul pentru a încărca datele.',
+    no_reports: 'Niciun raport găsit.',
+    load_error: 'Nu s-au putut încărca rapoartele.',
+    report_selected: 'Raport selectat',
+    view: 'Vizualizare',
+    view_sub: 'Deschide raportul într-un tab nou',
+    download_print: 'Descarcă / Printează',
+    download_sub: 'Deschide dialogul de printare',
+    cancel: 'Anulează',
+    records: 'înregistrări',
+    columns: 'coloane',
+    rows: 'rânduri',
+    reports: 'rapoarte',
+  },
+  en: {
+    app_title: 'SSM Reports',
+    app_sub: 'Centralized database',
+    login_label: 'Access password',
+    login_placeholder: 'Enter password...',
+    login_btn: 'Sign in',
+    connecting: 'Connecting...',
+    logout: 'Sign out',
+    tab_rapoarte: 'Reports',
+    tab_csv: 'Register',
+    search_placeholder: 'Search by number, location, date...',
+    sort_newest: 'Newest first',
+    sort_oldest: 'Oldest first',
+    sort_alpha: 'Alphabetical',
+    select_report: 'Select a report from the list',
+    zoom_minus: 'Zoom out',
+    zoom_plus: 'Zoom in',
+    zoom_reset: 'Reset zoom',
+    download: 'Download',
+    loading_report: 'Loading report...',
+    report_error: 'Error loading report.',
+    retry: 'Try again',
+    select_report_msg: 'Select a report from the list to preview it.',
+    csv_search: 'Search all columns...',
+    reload: 'Reload',
+    export_csv: 'Export CSV',
+    loading_csv: 'Loading register...',
+    csv_empty: 'Register is empty.',
+    csv_load_prompt: 'Click the tab to load data.',
+    no_reports: 'No reports found.',
+    load_error: 'Could not load reports.',
+    report_selected: 'Selected report',
+    view: 'View',
+    view_sub: 'Open report in a new tab',
+    download_print: 'Download / Print',
+    download_sub: 'Open print dialog',
+    cancel: 'Cancel',
+    records: 'records',
+    columns: 'columns',
+    rows: 'rows',
+    reports: 'reports',
+  }
+};
+
+var currentLang = 'ro';
+
+function t(key) {
+  return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['ro'][key]) || key;
+}
+
+function applyLang() {
+  // Text content
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  // Placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  // Titles
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+  // Update lang buttons
+  document.getElementById('btnLangRo').classList.toggle('active', currentLang === 'ro');
+  document.getElementById('btnLangEn').classList.toggle('active', currentLang === 'en');
+  // Update document title
+  document.title = t('app_title');
+  // Update status label if it shows connecting
+  var statusLabel = document.getElementById('statusLabel');
+  if (statusLabel && statusLabel.textContent === I18N['ro']['connecting'] || 
+      statusLabel && statusLabel.textContent === I18N['en']['connecting']) {
+    statusLabel.textContent = t('connecting');
+  }
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  try { localStorage.setItem('ssm_lang', lang); } catch(e) {}
+  applyLang();
+}
+
+// Load saved lang preference
+(function() {
+  try {
+    var saved = localStorage.getItem('ssm_lang');
+    if (saved === 'en') { currentLang = 'en'; }
+  } catch(e) {}
+})();
+
 </script>
 
 <!-- ── MOBILE ACTION MODAL ── -->
 <div class="mob-modal-overlay" id="mobModal" onclick="closeMobModal(event)">
   <div class="mob-modal">
-    <div class="mob-modal-title">Raport selectat</div>
+    <div class="mob-modal-title" data-i18n="report_selected">Raport selectat</div>
     <div class="mob-modal-name" id="mobModalName"></div>
     <div class="mob-modal-actions">
       <button class="mob-modal-btn" onclick="mobActionView()">
@@ -1054,7 +1213,7 @@ function exportCsv(isTest) {
         </div>
       </button>
     </div>
-    <button class="mob-modal-cancel" onclick="closeMobModal()">Anulează</button>
+    <button class="mob-modal-cancel" onclick="closeMobModal()" data-i18n="cancel">Anulează</button>
   </div>
 </div>
 </body>
