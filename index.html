@@ -440,19 +440,19 @@ function switchTab(tab) {
 // RAPOARTE NORMALE
 // ═══════════════════════════════════════════════
 async function loadRapoarte() {
-  setStatus('loading', t('connecting'));
+  setStatus('loading', 'Se conectează...');
   try {
     const res  = await fetch(GAS_URL + '?action=rapoarte&token=' + encodeURIComponent(sessionToken));
     const data = await res.json();
     if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
     if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
     allFiles = data.files || [];
-    setStatus('ok', allFiles.length + ' ' + t('reports'));
+    setStatus('ok', allFiles.length + ' rapoarte');
     document.getElementById('countBadge').textContent = allFiles.length + ' ' + t('reports');
     filterFiles();
 
   } catch(e) {
-    setStatus('error', currentLang === 'en' ? 'Connection error' : 'Eroare conexiune');
+    setStatus('error', 'Eroare conexiune');
     document.getElementById('fileList').innerHTML = '<div class="state-msg"><span style="color:#c0392b">' + t('load_error') + '</span></div>';
   }
 }
