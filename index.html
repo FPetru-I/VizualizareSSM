@@ -269,9 +269,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <div class="toolbar-row">
             <select class="sort-select" id="sortSelect" onchange="filterFiles()">
               <option value="nr_asc" selected>Număr crescător</option>
-              <option value="newest" data-i18n="sort_newest">Cele mai noi întâi</option>
-              <option value="oldest" data-i18n="sort_oldest">Cele mai vechi întâi</option>
-              <option value="name" data-i18n="sort_alpha">Alfabetic</option>
+              <option value="nr_desc">Număr descrescător</option>
             </select>
             <span class="count-badge" id="countBadge">— rapoarte</span>
           </div>
@@ -478,9 +476,7 @@ function filterFiles() {
   });
   const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
   if (sort === 'nr_asc') list.sort((a,b) => getNr(a) - getNr(b));
-  else if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
-  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
-  else list.sort((a,b) => a.name.localeCompare(b.name));
+  else if (sort === 'nr_desc') list.sort((a,b) => getNr(b) - getNr(a));
   document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
   renderList(list, false);
 }
