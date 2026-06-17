@@ -440,11 +440,43 @@ function switchTab(tab) {
 async function loadRapoarte() {
   setStatus('loading', 'Se conectează...');
   try {
-    const res  = await fetch(GAS_URL + '?action=rapoarte&token=' + encodeURIComponent(sessionToken));
-    const data = await res.json();
-    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
-    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
-    allFiles = data.files || [];
+    // ── Încărcăm lista de fișiere și CSV-ul în paralel ──
+    const [resFiles, resCsv] = await Promise.all([
+      fetch(GAS_URL + '?action=rapoarte&token=' + encodeURIComponent(sessionToken)),
+      fetch(GAS_URL + '?action=csv&token=' + encodeURIComponent(sessionToken))
+    ]);
+
+    const dataFiles = await resFiles.json();
+    if (dataFiles.status === 'error' && dataFiles.message === 'Neautorizat.') { doLogout(); return; }
+    if (dataFiles.status !== 'success') throw new Error(dataFiles.message || 'Eroare server');
+
+    // ── Construim map nr → locatie din CSV ──
+    var locatieMap = {};
+    try {
+      const dataCsv = await resCsv.json();
+      if (dataCsv.status === 'success' && dataCsv.csv) {
+        const rows = parseCSV(dataCsv.csv);
+        if (rows.length >= 2) {
+          const header = rows[0];
+          const idxNr  = header.indexOf('Nr Raport');
+          const idxLoc = header.indexOf('Locatie');
+          if (idxNr !== -1 && idxLoc !== -1) {
+            rows.slice(1).forEach(function(row) {
+              var nr  = (row[idxNr]  || '').trim();
+              var loc = (row[idxLoc] || '').trim();
+              if (nr) locatieMap[nr] = loc;
+            });
+          }
+        }
+      }
+    } catch(e) { console.warn('CSV locatie load error:', e); }
+
+    // ── Adăugăm locatie la fiecare fișier ──
+    allFiles = (dataFiles.files || []).map(function(f) {
+      f.locatie = locatieMap[f.nr] || '';
+      return f;
+    });
+
     setStatus('ok', allFiles.length + ' rapoarte');
     document.getElementById('countBadge').textContent = allFiles.length + ' ' + t('reports');
     filterFiles();
@@ -455,6 +487,7 @@ async function loadRapoarte() {
   }
 }
 
+  
 function setStatus(type, label) {
   const dot = document.getElementById('statusDot');
   dot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
