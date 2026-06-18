@@ -232,6 +232,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="topbar-right">
       <div class="lang-switcher">
         <button class="lang-btn active" id="btnLangRo" onclick="setLang('ro')">RO</button>
+        <button class="lang-btn" id="btnLangEn" onclick="setLang('en')">EN</button>
       </div>
       <div class="status-pill"><div class="status-dot loading" id="statusDot"></div><span id="statusLabel">Se conectează...</span></div>
       <button class="logout-btn" onclick="doLogout()">
@@ -691,7 +692,10 @@ function _doDownload(isTest) {
 }
 
 // ── Cache helpers ──
-function getCacheKey(filename, isTest) { return (isTest ? LS_TEST_PREFIX : LS_PREFIX) + filename; }
+function getCacheKey(filename, isTest) {
+  var langPrefix = (!isTest && currentLang === 'en') ? 'en_' : '';
+  return (isTest ? LS_TEST_PREFIX : LS_PREFIX) + langPrefix + filename;
+}
 
 function isCached(filename, isTest) {
   try { return !!localStorage.getItem(getCacheKey(filename, isTest)); } catch(e) { return false; }
@@ -727,7 +731,12 @@ function loadFromCache(filename, isTest) {
 
 // ── fetchHTML parametrizat ──
 async function fetchHTMLFor(filename, isTest) {
-  const folderParam = isTest ? '&folder=rapoarte_teste' : '';
+  var folderParam = '';
+  if (isTest) {
+    folderParam = '&folder=rapoarte_teste';
+  } else if (currentLang === 'en') {
+    folderParam = '&folder=rapoarte_raw_EN';
+  }
   const url = GAS_URL + '?action=html&filename=' + encodeURIComponent(filename) +
               folderParam + '&token=' + encodeURIComponent(sessionToken);
   const res = await fetch(url);
@@ -1190,8 +1199,10 @@ function applyLang() {
     el.title = t(el.getAttribute('data-i18n-title'));
   });
   // Update lang buttons
-  document.getElementById('btnLangRo').classList.toggle('active', currentLang === 'ro');
-  document.getElementById('btnLangEn').classList.toggle('active', currentLang === 'en');
+  var btnRo = document.getElementById('btnLangRo');
+  var btnEn = document.getElementById('btnLangEn');
+  if (btnRo) btnRo.classList.toggle('active', currentLang === 'ro');
+  if (btnEn) btnEn.classList.toggle('active', currentLang === 'en');
   // Update document title
   document.title = t('app_title');
   // Update status label if it shows connecting
@@ -1203,9 +1214,19 @@ function applyLang() {
 }
 
 function setLang(lang) {
+  if (currentLang === lang) return;
   currentLang = lang;
   try { localStorage.setItem('ssm_lang', lang); } catch(e) {}
   applyLang();
+  // La schimbarea limbii, resetăm blob-ul curent și reîncărcăm din folderul corect
+  currentBlob = null;
+  if (currentFile) {
+    // Ștergem cache-ul pentru fișierul curent din ambele limbi
+    try {
+      localStorage.removeItem(LS_PREFIX + currentFile.name);
+    } catch(e) {}
+    previewCurrent();
+  }
 }
 
 // Load saved lang preference
