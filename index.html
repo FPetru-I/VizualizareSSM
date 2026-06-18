@@ -165,6 +165,24 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .badge-nu{background:#fef2f2;color:var(--danger);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 .badge-na{background:#f0f4f8;color:#5a7a9e;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;}
 
+.csv-table th {
+  position: relative;
+}
+.col-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  user-select: none;
+  background: transparent;
+}
+.col-resize-handle:hover {
+  background: var(--accent);
+  opacity: 0.4;
+}
+  
 /* ── PROGRESS BAR PDF ── */
 .pdf-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
 .pdf-progress-fill{height:100%;background:var(--accent);width:0%;transition:width 0.2s ease;border-radius:2px;}
@@ -963,7 +981,9 @@ function renderCsvFor(rows, headers, isTest) {
   let html = '<table class="csv-table"><thead><tr>';
   headers.forEach((h,i) => {
     const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
-    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + h + '</th>';
+    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + 
+            h + '<div class="col-resize-handle" onclick="event.stopPropagation()" ' +
+            'onmousedown="initColResize(event,this)"></div></th>';
   });
   html += '</tr></thead><tbody>';
   rows.forEach(row => {
@@ -998,6 +1018,28 @@ function sortCsvFor(colIdx, isTest) {
   }
 }
 
+  function initColResize(e, handle) {
+  e.preventDefault();
+  e.stopPropagation();
+  var th = handle.parentElement;
+  var startX = e.clientX;
+  var startW = th.offsetWidth;
+
+  function onMove(e) {
+    var newW = Math.max(40, startW + (e.clientX - startX));
+    th.style.width = newW + 'px';
+    th.style.minWidth = newW + 'px';
+    th.style.maxWidth = newW + 'px';
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
 
 // ── Mobile: show/hide list vs preview ──
 function isMobileView() { return window.innerWidth <= 680; }
