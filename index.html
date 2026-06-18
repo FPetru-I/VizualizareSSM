@@ -477,8 +477,7 @@ async function loadRapoarte() {
       return f;
     });
 
-    setStatus('ok', allFiles.length + ' rapoarte');
-    document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' ' + t('count_reports');
+    setStatus('ok', allFiles.length + ' ' + t('count_reports'));
     filterFiles();
 
   } catch(e) {
@@ -508,7 +507,7 @@ function filterFiles() {
   const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
   if (sort === 'nr_asc') list.sort((a,b) => getNr(a) - getNr(b));
   else if (sort === 'nr_desc') list.sort((a,b) => getNr(b) - getNr(a));
-  document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' rapoarte';
+  document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' ' + t('count_reports');
   renderList(list, false);
 }
 function renderList(files, isTest) {
