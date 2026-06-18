@@ -661,6 +661,9 @@ function showHtmlPreview(html, isTest) {
     const titleTag = '<title>' + title + '</title>';
     let htmlT = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, titleTag);
     if (!htmlT.includes(titleTag)) htmlT = htmlT.replace(/<head>/i, '<head>' + titleTag);
+    const a4Style = '<style>@page{size:A4 portrait!important;margin:1cm 1.5cm!important;}' +
+                    '@media print{html,body{width:210mm!important;}}</style>';
+    htmlT = htmlT.replace('</head>', a4Style + '</head>');
     frame.srcdoc    = htmlT;
     frame.className = 'pdf-frame show';
     showPreviewState(null, isTest);
@@ -1076,8 +1079,12 @@ function _mobOpenUrl(html, print) {
   );
   var w = window.open('', '_blank');
   if (!w) { alert('Permite popup-uri pentru acest site și încearcă din nou.'); return; }
+  var a4Style = '<style>@page{size:A4 portrait!important;margin:1cm 1.5cm!important;}' +
+                '@media print{html,body{width:210mm!important;}</style>';
+  var htmlA4 = htmlWithTitle.replace('</head>', a4Style + '</head>');
+  if (htmlA4 === htmlWithTitle) htmlA4 = a4Style + htmlWithTitle;
   w.document.open();
-  w.document.write(htmlWithTitle);
+  w.document.write(htmlA4);
   w.document.close();
   if (print) {
     w.onload = function() {
