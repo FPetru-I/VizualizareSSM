@@ -674,7 +674,6 @@ function showHtmlPreview(html, isTest) {
 
 function downloadCurrent() {
   if (!currentFile) return;
-
   const fileName = currentFile.name.replace(/\.[^.]+$/, '');
 
   function openAndPrint(htmlContent) {
@@ -684,11 +683,13 @@ function downloadCurrent() {
     );
     const w = window.open('', '_blank');
     if (!w) { alert('Permite popup-uri pentru acest site.'); return; }
+    w.document.open();
     w.document.write(htmlWithTitle);
     w.document.close();
-    w.addEventListener('load', function() {
+    w.onload = function() {
       setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
-    });
+    };
+    setTimeout(function() { try { w.print(); } catch(ex) {} }, 1200);
   }
 
   if (currentBlob && typeof currentBlob === 'string') {
@@ -702,6 +703,7 @@ function downloadCurrent() {
     openAndPrint(html);
   });
 }
+  
 // ── Cache helpers ──
 function getCacheKey(filename, isTest) {
   var langPrefix = (!isTest && currentLang === 'en') ? 'en_' : '';
