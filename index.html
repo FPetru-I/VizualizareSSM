@@ -682,27 +682,49 @@ function _doDownload(isTest) {
   const file    = isTest ? currentTestFile : currentFile;
   const blob    = isTest ? currentTestBlob : currentBlob;
   if (!file) return;
+
+  const fileName = file.name.replace(/\.[^.]+$/, '');
+
   const doPrint = function() {
     try {
+      // Injectăm titlul în iframe înainte de print — browserul îl folosește ca nume fișier
+      try {
+        const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+        if (iframeDoc && iframeDoc.title !== fileName) {
+          iframeDoc.title = fileName;
+        }
+      } catch(ex) {}
       const orig = document.title;
-      document.title = file.name.replace(/\.[^.]+$/, '');
+      document.title = fileName;
       frame.contentWindow.focus();
       frame.contentWindow.print();
-      setTimeout(function() { document.title = orig; }, 1000);
+      setTimeout(function() { document.title = orig; }, 1500);
     } catch(e) {
       if (blob && typeof blob === 'string') {
-        const w = window.open('', '_blank');
-        if (w) { w.document.write(blob); w.document.close(); w.addEventListener('load', () => setTimeout(() => w.print(), 300)); }
+        // Fallback: deschidem HTML-ul într-un tab nou cu titlul corect
+        const htmlWithTitle = blob.replace(
+          /<title[^>]*>[\s\S]*?<\/title>/i,
+          '<title>' + fileName + '</title>'
+        );
+        const blobObj = new Blob([htmlWithTitle], { type: 'text/html' });
+        const objUrl  = URL.createObjectURL(blobObj);
+        const w = window.open(objUrl, '_blank');
+        if (w) {
+          w.addEventListener('load', function() {
+            setTimeout(function() { try { w.print(); } catch(ex) {} }, 300);
+          });
+        }
+        setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
       }
     }
   };
+
   if (blob && frame.srcdoc) { doPrint(); }
   else {
     const fn = isTest ? previewCurrentTest : previewCurrent;
     fn().then(() => setTimeout(doPrint, 800));
   }
 }
-
 // ── Cache helpers ──
 function getCacheKey(filename, isTest) {
   var langPrefix = (!isTest && currentLang === 'en') ? 'en_' : '';
