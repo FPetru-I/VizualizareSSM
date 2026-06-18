@@ -702,14 +702,6 @@ function downloadCurrent() {
     openAndPrint(html);
   });
 }
-
-  // Altfel îl descărcăm și printăm după
-  fetchHTMLFor(file.name, isTest).then(function(html) {
-    if (!html) { alert('Nu s-a putut încărca raportul.'); return; }
-    if (isTest) { currentTestBlob = html; } else { currentBlob = html; }
-    openAndPrint(html);
-  });
-}
 // ── Cache helpers ──
 function getCacheKey(filename, isTest) {
   var langPrefix = (!isTest && currentLang === 'en') ? 'en_' : '';
