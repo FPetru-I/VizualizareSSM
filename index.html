@@ -213,7 +213,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <div><div class="login-title" data-i18n="app_title">Rapoarte SSM</div><div class="login-sub" data-i18n="app_sub">Bază de date centralizată</div></div>
+      <div class="login-title" data-i18n="app_title">Rapoarte SSM</div>
     </div>
     <label class="login-label" for="passwordInput" data-i18n="login_label">Parolă de acces</label>
     <input class="login-input" type="password" id="passwordInput" placeholder="Introduceți parola..." data-i18n-placeholder="login_placeholder" onkeydown="if(event.key==='Enter') doLogin()"/>
@@ -686,39 +686,27 @@ function _doDownload(isTest) {
   const fileName = file.name.replace(/\.[^.]+$/, '');
 
   const doPrint = function() {
-    try {
-      // Injectăm titlul în iframe înainte de print — browserul îl folosește ca nume fișier
-      try {
-        const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-        if (iframeDoc && iframeDoc.title !== fileName) {
-          iframeDoc.title = fileName;
-        }
-      } catch(ex) {}
-      const orig = document.title;
-      document.title = fileName;
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-      setTimeout(function() { document.title = orig; }, 1500);
-    } catch(e) {
-      if (blob && typeof blob === 'string') {
-        // Fallback: deschidem HTML-ul într-un tab nou cu titlul corect
-        const htmlWithTitle = blob.replace(
-          /<title[^>]*>[\s\S]*?<\/title>/i,
-          '<title>' + fileName + '</title>'
-        );
-        const blobObj = new Blob([htmlWithTitle], { type: 'text/html' });
-        const objUrl  = URL.createObjectURL(blobObj);
-        const w = window.open(objUrl, '_blank');
-        if (w) {
-          w.addEventListener('load', function() {
-            setTimeout(function() { try { w.print(); } catch(ex) {} }, 300);
-          });
-        }
-        setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
-      }
-    }
-  };
+    const htmlContent = (blob && typeof blob === 'string') ? blob : null;
+    if (!htmlContent) return;
 
+    // Injectăm titlul corect în HTML
+    const htmlWithTitle = htmlContent.replace(
+      /<title[^>]*>[\s\S]*?<\/title>/i,
+      '<title>' + fileName + '</title>'
+    );
+
+    // Deschidem într-un tab nou — browserul va folosi <title> ca nume la salvare
+    const blobObj = new Blob([htmlWithTitle], { type: 'text/html' });
+    const objUrl  = URL.createObjectURL(blobObj);
+    const w = window.open(objUrl, '_blank');
+    if (!w) { alert('Permite popup-uri pentru acest site.'); return; }
+    w.addEventListener('load', function() {
+      setTimeout(function() {
+        try { w.print(); } catch(ex) {}
+      }, 400);
+    });
+    setTimeout(function() { URL.revokeObjectURL(objUrl); }, 120000);
+  };
   if (blob && frame.srcdoc) { doPrint(); }
   else {
     const fn = isTest ? previewCurrentTest : previewCurrent;
