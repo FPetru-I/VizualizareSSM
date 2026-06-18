@@ -1069,16 +1069,22 @@ function mobActionDownload() {
 }
 
 function _mobOpenUrl(html, print) {
-  var blob   = new Blob([html], { type: 'text/html' });
-  var objUrl = URL.createObjectURL(blob);
-  var w = window.open(objUrl, '_blank');
+  var fileName = (currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'Raport');
+  var htmlWithTitle = html.replace(
+    /<title[^>]*>[\s\S]*?<\/title>/i,
+    '<title>' + fileName + '</title>'
+  );
+  var w = window.open('', '_blank');
   if (!w) { alert('Permite popup-uri pentru acest site și încearcă din nou.'); return; }
+  w.document.open();
+  w.document.write(htmlWithTitle);
+  w.document.close();
   if (print) {
-    w.addEventListener('load', function() {
+    w.onload = function() {
       setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
-    });
+    };
+    setTimeout(function() { try { w.print(); } catch(ex) {} }, 1200);
   }
-  setTimeout(function() { URL.revokeObjectURL(objUrl); }, 60000);
 }
 
 function exportCsv(isTest) {
