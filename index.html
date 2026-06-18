@@ -170,18 +170,18 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 }
 .col-resize-handle {
   position: absolute;
-  right: -6px;
+  right: -10px;
   top: 0;
   bottom: 0;
-  width: 12px;
+  width: 20px;
   cursor: col-resize;
   user-select: none;
   background: transparent;
   z-index: 1;
 }
 .col-resize-handle:hover {
-  background: var(--accent);
-  opacity: 0.4;
+  background: linear-gradient(to right, transparent 30%, var(--accent) 45%, var(--accent) 55%, transparent 70%);
+  opacity: 0.5;
 }
   
 /* ── PROGRESS BAR PDF ── */
