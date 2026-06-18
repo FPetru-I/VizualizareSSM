@@ -677,41 +677,39 @@ function downloadCurrent() {
 }
 
 function _doDownload(isTest) {
-  const frameId = isTest ? 'pdfFrameTest' : 'pdfFrame';
-  const frame   = document.getElementById(frameId);
-  const file    = isTest ? currentTestFile : currentFile;
-  const blob    = isTest ? currentTestBlob : currentBlob;
+  const file = isTest ? currentTestFile : currentFile;
   if (!file) return;
 
   const fileName = file.name.replace(/\.[^.]+$/, '');
 
-  const doPrint = function() {
-    const htmlContent = (blob && typeof blob === 'string') ? blob : null;
-    if (!htmlContent) return;
-
-    // Injectăm titlul corect în HTML
+  function openAndPrint(htmlContent) {
     const htmlWithTitle = htmlContent.replace(
       /<title[^>]*>[\s\S]*?<\/title>/i,
       '<title>' + fileName + '</title>'
     );
-
-    // Deschidem într-un tab nou — browserul va folosi <title> ca nume la salvare
     const blobObj = new Blob([htmlWithTitle], { type: 'text/html' });
     const objUrl  = URL.createObjectURL(blobObj);
     const w = window.open(objUrl, '_blank');
     if (!w) { alert('Permite popup-uri pentru acest site.'); return; }
     w.addEventListener('load', function() {
-      setTimeout(function() {
-        try { w.print(); } catch(ex) {}
-      }, 400);
+      setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
     });
     setTimeout(function() { URL.revokeObjectURL(objUrl); }, 120000);
-  };
-  if (blob && frame.srcdoc) { doPrint(); }
-  else {
-    const fn = isTest ? previewCurrentTest : previewCurrent;
-    fn().then(() => setTimeout(doPrint, 800));
   }
+
+  // Dacă avem deja HTML-ul în memorie îl folosim direct
+  var existing = isTest ? currentTestBlob : currentBlob;
+  if (existing && typeof existing === 'string') {
+    openAndPrint(existing);
+    return;
+  }
+
+  // Altfel îl descărcăm și printăm după
+  fetchHTMLFor(file.name, isTest).then(function(html) {
+    if (!html) { alert('Nu s-a putut încărca raportul.'); return; }
+    if (isTest) { currentTestBlob = html; } else { currentBlob = html; }
+    openAndPrint(html);
+  });
 }
 // ── Cache helpers ──
 function getCacheKey(filename, isTest) {
