@@ -675,32 +675,29 @@ function showHtmlPreview(html, isTest) {
 function downloadCurrent() {
   if (!currentFile) return;
   const fileName = currentFile.name.replace(/\.[^.]+$/, '');
+  const frame = document.getElementById('pdfFrame');
 
-  function openAndPrint(htmlContent) {
-    const htmlWithTitle = htmlContent.replace(
-      /<title[^>]*>[\s\S]*?<\/title>/i,
-      '<title>' + fileName + '</title>'
-    );
-    const w = window.open('', '_blank');
-    if (!w) { alert('Permite popup-uri pentru acest site.'); return; }
-    w.document.open();
-    w.document.write(htmlWithTitle);
-    w.document.close();
-    w.onload = function() {
-      setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
-    };
-    setTimeout(function() { try { w.print(); } catch(ex) {} }, 1200);
+  function doPrint() {
+    // Setăm titlul în iframe direct — browserul îl folosește ca nume fișier
+    try {
+      frame.contentDocument.title = fileName;
+    } catch(e) {}
+    const orig = document.title;
+    document.title = fileName;
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    setTimeout(function() { document.title = orig; }, 2000);
   }
 
-  if (currentBlob && typeof currentBlob === 'string') {
-    openAndPrint(currentBlob);
+  // Dacă iframe-ul are deja raportul încărcat — printăm direct
+  if (frame.srcdoc && currentBlob) {
+    doPrint();
     return;
   }
 
-  fetchHTMLFor(currentFile.name, false).then(function(html) {
-    if (!html) { alert('Nu s-a putut încărca raportul.'); return; }
-    currentBlob = html;
-    openAndPrint(html);
+  // Altfel încărcăm mai întâi în preview, apoi printăm
+  previewCurrent().then(function() {
+    setTimeout(doPrint, 600);
   });
 }
   
