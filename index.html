@@ -499,8 +499,6 @@ function filterFiles() {
   const q    = document.getElementById('searchInput').value.toLowerCase();
   const sort = document.getElementById('sortSelect').value;
   let list = allFiles.filter(f => {
-    var nr = parseInt((f.nr||'').replace(/[^0-9]/g,''));
-    if (!isNaN(nr) && nr < 91) return false;
     return (f.name||'').toLowerCase().includes(q) ||
            (f.location||'').toLowerCase().includes(q) ||
            (f.nr||'').toLowerCase().includes(q) ||
