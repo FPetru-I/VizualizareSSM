@@ -170,13 +170,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 }
 .col-resize-handle {
   position: absolute;
-  right: 0;
+  right: -4px;
   top: 0;
   bottom: 0;
-  width: 5px;
+  width: 12px;
   cursor: col-resize;
   user-select: none;
   background: transparent;
+  z-index: 1;
 }
 .col-resize-handle:hover {
   background: var(--accent);
