@@ -673,36 +673,35 @@ function showHtmlPreview(html, isTest) {
 }
 
 function downloadCurrent() {
-  _doDownload(false);
-}
+  if (!currentFile) return;
 
-function _doDownload(isTest) {
-  const file = isTest ? currentTestFile : currentFile;
-  if (!file) return;
-
-  const fileName = file.name.replace(/\.[^.]+$/, '');
+  const fileName = currentFile.name.replace(/\.[^.]+$/, '');
 
   function openAndPrint(htmlContent) {
     const htmlWithTitle = htmlContent.replace(
       /<title[^>]*>[\s\S]*?<\/title>/i,
       '<title>' + fileName + '</title>'
     );
-    const blobObj = new Blob([htmlWithTitle], { type: 'text/html' });
-    const objUrl  = URL.createObjectURL(blobObj);
-    const w = window.open(objUrl, '_blank');
+    const w = window.open('', '_blank');
     if (!w) { alert('Permite popup-uri pentru acest site.'); return; }
+    w.document.write(htmlWithTitle);
+    w.document.close();
     w.addEventListener('load', function() {
       setTimeout(function() { try { w.print(); } catch(ex) {} }, 400);
     });
-    setTimeout(function() { URL.revokeObjectURL(objUrl); }, 120000);
   }
 
-  // Dacă avem deja HTML-ul în memorie îl folosim direct
-  var existing = isTest ? currentTestBlob : currentBlob;
-  if (existing && typeof existing === 'string') {
-    openAndPrint(existing);
+  if (currentBlob && typeof currentBlob === 'string') {
+    openAndPrint(currentBlob);
     return;
   }
+
+  fetchHTMLFor(currentFile.name, false).then(function(html) {
+    if (!html) { alert('Nu s-a putut încărca raportul.'); return; }
+    currentBlob = html;
+    openAndPrint(html);
+  });
+}
 
   // Altfel îl descărcăm și printăm după
   fetchHTMLFor(file.name, isTest).then(function(html) {
