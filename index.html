@@ -240,9 +240,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
       <div class="login-title" data-i18n="app_title">Rapoarte SSM</div>
     </div>
+    <label class="login-label" for="emailInput" data-i18n="email_label">Adresă email</label>
+    <input class="login-input" type="email" id="emailInput" placeholder="nume@ppcgroup.com" style="margin-bottom:12px;" data-i18n-placeholder="email_placeholder" onkeydown="if(event.key==='Enter') doLogin()"/>
     <label class="login-label" for="passwordInput" data-i18n="login_label">Parolă de acces</label>
     <input class="login-input" type="password" id="passwordInput" placeholder="Introduceți parola..." data-i18n-placeholder="login_placeholder" onkeydown="if(event.key==='Enter') doLogin()"/>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()" data-i18n="login_btn">Intră</button>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()" data-i18n="login_btn">Login</button>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
@@ -375,7 +377,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxnJiZaVczqr8TOPjA-AIkdL8WpQCkr3P77t4Y9SCNbKIcXDFVdfhRKPfJGixsNPAvh7w/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwCsG38ol1Y4N5H6jq4tOpqCQUs8aZmqmKwnHiYh6IoXkBZta9Z-3InpFmThp-gq6tPsQ/exec';
 
 // ── State rapoarte normale ──
 let allFiles = [], currentFile = null, currentBlob = null, sessionToken = null;
@@ -417,13 +419,14 @@ function showApp() {
 }
 
 async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim();
   const pw  = document.getElementById('passwordInput').value;
   const btn = document.getElementById('loginBtn');
   const err = document.getElementById('loginError');
-  if (!pw) return;
+  if (!email || !pw) return;
   btn.disabled = true; btn.textContent = 'Se verifică...'; err.style.display = 'none';
   try {
-    const res  = await fetch(GAS_URL + '?action=login&password=' + encodeURIComponent(pw));
+    const res  = await fetch(GAS_URL + '?action=login&password=' + encodeURIComponent(pw) + '&email=' + encodeURIComponent(email));
     const data = await res.json();
     if (data.status === 'success') {
       sessionToken = data.token;
