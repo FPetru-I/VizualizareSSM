@@ -183,7 +183,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 }
 .col-resize-handle:hover {
   background: linear-gradient(to right, transparent 30%, var(--accent) 45%, var(--accent) 55%, transparent 70%);
-  opacity: 0.5;
+  opacity: 0.5; 
+}
+.col-resize-left {
+  left: -10px;
+  right: auto;
 }
   
 /* ── PROGRESS BAR PDF ── */
@@ -984,9 +988,12 @@ function renderCsvFor(rows, headers, isTest) {
   let html = '<table class="csv-table"><thead><tr>';
   headers.forEach((h,i) => {
     const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    var handleHtml = (i > 0) 
+      ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)"></div>' 
+      : '';
     html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + 
-            h + '<div class="col-resize-handle" onclick="event.stopPropagation()" ' +
-            'onmousedown="initColResize(event,this)"></div></th>';
+            handleHtml + h + 
+            '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)"></div></th>';
   });
   html += '</tr></thead><tbody>';
   rows.forEach(row => {
@@ -1021,10 +1028,12 @@ function sortCsvFor(colIdx, isTest) {
   }
 }
 
-  function initColResize(e, handle) {
+  function initColResize(e, handle, dir) {
   e.preventDefault();
   e.stopPropagation();
-  var th = handle.parentElement;
+  // Handle-ul mereu redimensionează coloana din STÂNGA lui
+  var th = (dir === -1) ? handle.parentElement.previousElementSibling : handle.parentElement;
+  if (!th) return;
   var startX = e.clientX;
   var startW = th.offsetWidth;
 
