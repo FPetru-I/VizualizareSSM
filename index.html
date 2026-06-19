@@ -167,6 +167,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 .csv-table th {
   position: relative;
+  overflow: visible;
 }
 .col-resize-handle {
   position: absolute;
@@ -177,7 +178,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   cursor: col-resize;
   user-select: none;
   background: transparent;
-  z-index: 1;
+  z-index: 50;
+  pointer-events: auto;
 }
 .col-resize-handle:hover {
   background: linear-gradient(to right, transparent 30%, var(--accent) 45%, var(--accent) 55%, transparent 70%);
