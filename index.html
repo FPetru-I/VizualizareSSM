@@ -989,11 +989,11 @@ function renderCsvFor(rows, headers, isTest) {
   headers.forEach((h,i) => {
     const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     var handleHtml = (i > 0) 
-      ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)"></div>' 
+      ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)" ondblclick="event.stopPropagation();autoFitColumn(this,-1)"></div>' 
       : '';
     html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + 
             handleHtml + h + 
-            '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)"></div></th>';
+            '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)" ondblclick="event.stopPropagation();autoFitColumn(this,1)"></div></th>';
   });
   html += '</tr></thead><tbody>';
   rows.forEach(row => {
@@ -1053,6 +1053,40 @@ function sortCsvFor(colIdx, isTest) {
   document.addEventListener('mouseup', onUp);
 }
 
+function autoFitColumn(handle, dir) {
+  var th = (dir === -1) ? handle.parentElement.previousElementSibling : handle.parentElement;
+  if (!th) return;
+  var table = th.closest('table');
+  var colIdx = Array.from(th.parentElement.children).indexOf(th);
+
+  // Măsurăm lățimea maximă necesară folosind un canvas pentru text
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var thStyle = window.getComputedStyle(th);
+  ctx.font = thStyle.fontWeight + ' ' + thStyle.fontSize + ' ' + thStyle.fontFamily;
+
+  var maxWidth = ctx.measureText(th.textContent.trim()).width;
+
+  var rows = table.querySelectorAll('tbody tr');
+  rows.forEach(function(row) {
+    var cell = row.children[colIdx];
+    if (!cell) return;
+    var cellStyle = window.getComputedStyle(cell);
+    ctx.font = cellStyle.fontSize + ' ' + cellStyle.fontFamily;
+    var text = cell.getAttribute('title') || cell.textContent || '';
+    var w = ctx.measureText(text.trim()).width;
+    if (w > maxWidth) maxWidth = w;
+  });
+
+  // Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
+  var newW = Math.ceil(maxWidth) + 28;
+  newW = Math.max(40, newW);
+
+  th.style.width = newW + 'px';
+  th.style.minWidth = newW + 'px';
+  th.style.maxWidth = newW + 'px';
+}
+  
 // ── Mobile: show/hide list vs preview ──
 function isMobileView() { return window.innerWidth <= 680; }
 
