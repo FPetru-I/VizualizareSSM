@@ -189,6 +189,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   left: -10px;
   right: auto;
 }
+
+.csv-comments-toggle{
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);
+  cursor:pointer;white-space:nowrap;user-select:none;
+}
+.csv-comments-toggle input[type="checkbox"]{
+  width:15px;height:15px;cursor:pointer;accent-color:var(--accent);
+}
   
 /* ── PROGRESS BAR PDF ── */
 .pdf-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
@@ -350,28 +358,31 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       </div>
     </div>
 
-    <!-- ═══ TAB: CSV NORMAL ═══ -->
-    <div class="tab-content" id="content-csv">
-      <div class="csv-panel">
-        <div class="csv-toolbar">
-          <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." data-i18n-placeholder="csv_search" oninput="filterCsv()"/>
-          <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
-            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg data-i18n="reload">
-            Reîncarcă
-          </button>
-          <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv(false)" disabled>
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg data-i18n="export_csv">
-            Export CSV
-          </button>
-          <span class="count-badge" id="csvCountBadge"></span>
-        </div>
-        <div class="csv-table-wrap" id="csvTableWrap">
-          <div class="state-msg"><span style="color:var(--text-faint)" data-i18n="csv_load_prompt">Apasă tab-ul pentru a încărca datele.</span></div>
-        </div>
-        <div class="csv-status" id="csvStatus"></div>
-      </div>
+<!-- ═══ TAB: CSV NORMAL ═══ -->
+<div class="tab-content" id="content-csv">
+  <div class="csv-panel">
+    <div class="csv-toolbar">
+      <input class="csv-search" type="text" id="csvSearch" placeholder="Caută în toate coloanele..." data-i18n-placeholder="csv_search" oninput="filterCsv()"/>
+      <label class="csv-comments-toggle">
+        <input type="checkbox" id="toggleComments" onchange="onToggleComments()"/>
+        <span data-i18n="show_comments">Arată comentariile</span>
+      </label>
+      <button class="btn" onclick="loadCsv()" id="btnRefreshCsv">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span data-i18n="reload">Reîncarcă</span>
+      </button>
+      <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv(false)" disabled>
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="export_csv">Export CSV</span>
+      </button>
+      <span class="count-badge" id="csvCountBadge"></span>
     </div>
+    <div class="csv-table-wrap" id="csvTableWrap">
+      <div class="state-msg"><span style="color:var(--text-faint)" data-i18n="csv_load_prompt">Apasă tab-ul pentru a încărca datele.</span></div>
     </div>
+    <div class="csv-status" id="csvStatus"></div>
+  </div>
+</div>
 
   </div>
 </div>
@@ -982,26 +993,50 @@ function filterCsvTest() {
   document.getElementById('csvCountBadgeTest').textContent = filtered.length + ' / ' + csvTestData.length + ' rânduri';
 }
 
+let showComments = false;
+
+function isCommentColumn(headerName) {
+  return (headerName || '').toUpperCase().includes('COMENTARIU');
+}
+
+function onToggleComments() {
+  showComments = document.getElementById('toggleComments').checked;
+  const q = document.getElementById('csvSearch').value.toLowerCase();
+  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  renderCsvFor(filtered, csvHeaders, false);
+}
+
+function onToggleComments() {
+  showComments = document.getElementById('toggleComments').checked;
+  const q = document.getElementById('csvSearch').value.toLowerCase();
+  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  renderCsvFor(filtered, csvHeaders, false);
+}
+
 function renderCsvFor(rows, headers, isTest) {
   const sfx      = isTest ? 'Test' : '';
   const wrap     = document.getElementById('csvTableWrap' + sfx);
   const sortCol  = isTest ? csvTestSortCol : csvSortCol;
   const sortDir  = isTest ? csvTestSortDir : csvSortDir;
   if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>' + (currentLang === 'en' ? 'No results.' : 'Niciun rezultat.') + '</span></div>'; return; }
+
+  const visibleIdx = headers.map((h, i) => i).filter(i => showComments || !isCommentColumn(headers[i]));
+
   let html = '<table class="csv-table"><thead><tr>';
-  headers.forEach((h,i) => {
+  visibleIdx.forEach(i => {
+    const h = headers[i];
     const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
-    var handleHtml = (i > 0) 
-      ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)" ondblclick="event.stopPropagation();autoFitColumn(this,-1)"></div>' 
+    var handleHtml = (i > 0)
+      ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)" ondblclick="event.stopPropagation();autoFitColumn(this,-1)"></div>'
       : '';
-    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' + 
-            handleHtml + h + 
+    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' +
+            handleHtml + h +
             '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)" ondblclick="event.stopPropagation();autoFitColumn(this,1)"></div></th>';
   });
   html += '</tr></thead><tbody>';
   rows.forEach(row => {
     html += '<tr>';
-    headers.forEach((_,i) => {
+    visibleIdx.forEach(i => {
       const val = row[i] || '';
       let display = val;
       if (val === 'DA') display = '<span class="badge-da">DA</span>';
@@ -1235,6 +1270,7 @@ const I18N = {
     loading_csv: 'Se încarcă centralizatorul...',
     csv_empty: 'Centralizatorul e gol.',
     csv_load_prompt: 'Apasă tab-ul pentru a încărca datele.',
+    show_comments: 'Arată comentariile',
     no_reports: 'Niciun raport găsit.',
     load_error: 'Nu s-au putut încărca rapoartele.',
     report_selected: 'Raport selectat',
@@ -1282,6 +1318,7 @@ const I18N = {
     loading_csv: 'Loading register...',
     csv_empty: 'Register is empty.',
     csv_load_prompt: 'Click the tab to load data.',
+    show_comments: 'Show comments',
     no_reports: 'No reports found.',
     load_error: 'Could not load reports.',
     report_selected: 'Selected report',
