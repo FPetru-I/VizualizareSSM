@@ -20,9 +20,7 @@ Utilizatorul selecteaza un raport, GAS citeste fisierul HTML din GitHub, afisat 
         v
 Tab separat "Centralizator": CSV brut parsat si afisat ca tabel interactiv
 ```
----
 Nu exista baza de date proprie. Toate rapoartele sunt fisiere HTML statice stocate in GitHub, iar centralizatorul e un singur fisier `.csv`. Pagina doar le citeste prin GAS si le randeaza.
----
 ---
 2. Autentificare
 2.1 Flux de login — functia `doLogin()`
