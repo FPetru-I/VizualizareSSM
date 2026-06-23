@@ -78,7 +78,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 /* ── ZOOM ── */
 .btn-icon{padding:5px 8px;min-width:32px;justify-content:center;font-size:14px;font-weight:600;}
-.btn-back-mobile{display:none;}
 .zoom-level{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;min-width:36px;text-align:center;}
 .toolbar-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
 
@@ -210,7 +209,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   .preview{display:none;flex:1;min-height:0;flex-direction:column;}
   .preview.mobile-show{display:flex;}
   .sidebar.mobile-hide{display:none;}
-  .btn-back-mobile{display:flex !important;}
   .topbar{padding:0 14px;}
   .csv-panel{flex-direction:column;}
   .tabs{padding:0 10px;}
@@ -315,10 +313,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       </div>
       <div class="preview" id="preview-rapoarte">
         <div class="preview-toolbar">
-          <button class="btn btn-back-mobile" onclick="mobileBackToList(false)" title="Înapoi la listă" style="margin-right:4px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Listă
-          </button>
           <span class="preview-filename empty" id="previewFilename" data-i18n="select_report">Selectează un raport din listă</span>
           <button class="btn btn-icon" id="btnZoomOut" onclick="zoomPreview(-25)" disabled title="Micșorează" data-i18n-title="zoom_minus">−</button>
           <span class="zoom-level" id="zoomLevel">100%</span>
