@@ -12,7 +12,6 @@
   --text-faint:#9b9890;--accent:#1a4d8f;--accent-light:#e8eef7;
   --accent-dark:#0f3060;--yes:#1a6b3c;--yes-bg:#eaf5ee;
   --danger:#c0392b;--radius:8px;
-  --test:#b45309;--test-bg:#fef3c7;--test-border:#fde68a;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}html,body{height:100%;}
@@ -57,20 +56,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab.tab-test.active{color:var(--test);border-bottom-color:var(--test);}
-.tab.tab-test:hover{color:var(--test);}
 .tab-content{display:none !important;position:absolute;top:0;left:0;right:0;bottom:0;}
 .tab-content.active{display:flex !important;position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;}
-.tab-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--test-bg);color:var(--test);border:1px solid var(--test-border);}
-
-/* ── TEST FILE ITEM ── */
-.file-item.test-item .file-icon{background:var(--test-bg);}
-.file-item.test-item .file-icon svg{stroke:var(--test);}
-.file-item.test-item.active .file-icon{background:var(--test);}
-.file-item.test-item.active .file-icon svg{stroke:#fff;}
-.file-item.test-item{border-color:var(--test-border)!important;}
-.file-item.test-item:hover{background:var(--test-bg);border-color:var(--test)!important;}
-.file-item.test-item.active{background:var(--test-bg);border-color:var(--test)!important;box-shadow:inset 0 0 0 1px var(--test);}
 
 /* ── MAIN LAYOUT ── */
 .main{position:relative;flex:1;min-height:0;overflow:hidden;}
@@ -365,7 +352,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         <span data-i18n="reload">Reîncarcă</span>
       </button>
-      <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv(false)" disabled>
+      <button class="btn btn-primary" id="btnExportCsv" onclick="exportCsv()" disabled>
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span data-i18n="export_csv">Export CSV</span>
       </button>
@@ -388,22 +375,16 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwCsG38ol1Y4N5H6jq4tOpq
 let allFiles = [], currentFile = null, currentBlob = null, sessionToken = null;
 let currentZoom = 100;
 
-// ── State rapoarte teste ──
-let allTestFiles = [], currentTestFile = null, currentTestBlob = null;
-let currentTestZoom = 100;
-let testeLoaded = false;
-
 // ── State CSV ──
 let csvData = [], csvHeaders = [], csvSortCol = -1, csvSortDir = 1;
 let csvLoaded = false;
-let csvTestData = [], csvTestHeaders = [], csvTestSortCol = -1, csvTestSortDir = 1;
-let csvTestLoaded = false;
 
 // ── Cache localStorage ──
 const LS_PREFIX = 'ssm_pdf_';
-const LS_TEST_PREFIX = 'ssm_test_';
 const LS_MAX_MB = 4;
-
+const A4_PRINT_STYLE = '<style>@page{size:A4 portrait!important;margin:1cm 1.5cm!important;}' +
+                        '@media print{html,body{width:210mm!important;}}</style>';
+  
 // ── INIT ──
 (function init() {
   var storedToken = sessionStorage.getItem('ssm_token');
@@ -451,7 +432,6 @@ function doLogout() {
   sessionStorage.removeItem('ssm_token');
   sessionToken = null; allFiles = []; allTestFiles = [];
   currentFile = null; currentBlob = null;
-  currentTestFile = null; currentTestBlob = null;
   document.getElementById('passwordInput').value = '';
   showLogin();
 }
@@ -462,9 +442,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('content-' + tab).classList.add('active');
-  if (tab === 'csv'       && !csvLoaded)     { loadCsv(); }
-  if (tab === 'teste'     && !testeLoaded)   { loadTeste(); }
-  if (tab === 'csv-teste' && !csvTestLoaded) { loadCsvTest(); }
+  if (tab === 'csv' && !csvLoaded) { loadCsv(); }
 }
 
 // ═══════════════════════════════════════════════
@@ -554,28 +532,22 @@ function filterFiles() {
   if (sort === 'nr_asc') list.sort((a,b) => getNr(a) - getNr(b));
   else if (sort === 'nr_desc') list.sort((a,b) => getNr(b) - getNr(a));
   document.getElementById('countBadge').textContent = list.length + ' / ' + allFiles.length + ' ' + t('count_reports');
-  renderList(list, false);
+  renderList(list);
 }
-function renderList(files, isTest) {
-  const elId   = isTest ? 'fileListTest' : 'fileList';
-  const el     = document.getElementById(elId);
-  const active = isTest ? currentTestFile : currentFile;
+function renderList(files) {
+  const el     = document.getElementById('fileList');
+  const active = currentFile;
   if (!files.length) {
     el.innerHTML = '<div class="state-msg"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8b5ac" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>' + t('no_reports') + '</span></div>';
     return;
   }
-  const lsPrefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
   el.innerHTML = files.map(f => {
-    const cached    = isCached(f.name, isTest);
-    const testCls   = isTest ? ' test-item' : '';
+    const cached    = isCached(f.name);
     const activeCls = (active && active.name === f.name) ? ' active' : '';
-    const onclickFn = isTest ? 'selectTestFile' : 'selectFile';
-    const hoverFn   = isTest ? 'prefetchOnHoverTest' : 'prefetchOnHover';
     const fJson     = JSON.stringify(f).replace(/"/g, '&quot;');
-    return '<div class="file-item' + testCls + activeCls + '"'
+    return '<div class="file-item' + activeCls + '"'
       + ' data-fname="' + f.name.replace(/"/g, '&quot;') + '"'
-      + ' data-istest="' + (isTest ? '1' : '0') + '"'
-      + ' onclick="' + onclickFn + '(' + fJson + ')"'
+      + ' onclick="selectFile(' + fJson + ')"'
       + ' onpointerdown="handlePrefetchDown(this)"'
       + ' onmouseenter="handlePrefetchDown(this)">'
       + '<div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
@@ -604,32 +576,28 @@ function selectFile(f) {
   document.getElementById('statLocatie').textContent = f.locatie || '—';
   document.getElementById('statsBar').style.display = 'flex';
   filterFiles();
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    // Mobil: arătăm modalul imediat, descărcăm HTML în background
-    window._mobHtml   = null;
-    window._mobIsTest = false;
+  if (isMobileDevice()) {
+    window._mobHtml = null;
     document.getElementById('mobModalName').textContent = f.name;
     document.getElementById('mobModal').classList.add('show');
-    // Descărcare în background
-    var cached = loadFromCache(f.name, false);
+    var cached = loadFromCache(f.name);
     if (cached) {
       window._mobHtml = cached;
     } else {
-      fetchHTMLFor(f.name, false).then(function(html) {
-        if (html) { saveToCache(f.name, html, false); window._mobHtml = html; }
+      fetchHTMLFor(f.name).then(function(html) {
+        if (html) { saveToCache(f.name, html); window._mobHtml = html; }
       });
     }
   } else {
-    mobileShowPreview(false);
+    mobileShowPreview();
     previewCurrent();
   }
 }
 
-function showPreviewState(state, isTest) {
-  const sfx = isTest ? 'Test' : '';
-  document.getElementById('previewEmpty' + sfx).style.display = state === 'empty' ? 'flex' : 'none';
-  document.getElementById('previewLoading' + sfx).className = 'preview-loading' + (state === 'loading' ? ' show' : '');
-  document.getElementById('previewError' + sfx).className = 'preview-error' + (state === 'error' ? ' show' : '');
+function showPreviewState(state) {
+  document.getElementById('previewEmpty').style.display = state === 'empty' ? 'flex' : 'none';
+  document.getElementById('previewLoading').className = 'preview-loading' + (state === 'loading' ? ' show' : '');
+  document.getElementById('previewError').className = 'preview-error' + (state === 'error' ? ' show' : '');
 }
 
 function zoomPreview(delta) {
@@ -643,10 +611,10 @@ function zoomPreview(delta) {
 
 async function previewCurrent() {
   if (!currentFile) return;
-  if (currentBlob) { showHtmlPreview(currentBlob, false); return; }
-  const cached = loadFromCache(currentFile.name, false);
-  if (cached) { currentBlob = cached; showHtmlPreview(cached, false); return; }
-  showPreviewState('loading', false);
+  if (currentBlob) { showHtmlPreview(currentBlob); return; }
+  const cached = loadFromCache(currentFile.name);
+  if (cached) { currentBlob = cached; showHtmlPreview(cached); return; }
+  showPreviewState('loading');
   document.getElementById('previewProgress').textContent = currentFile.name;
   document.getElementById('previewProgressPct').textContent = '0%';
   document.getElementById('progressFill').style.width = '0%';
@@ -658,48 +626,42 @@ async function previewCurrent() {
     document.getElementById('progressFill').style.width = pct + '%';
   }, 100);
   try {
-    const html = await fetchHTMLFor(currentFile.name, false);
+    const html = await fetchHTMLFor(currentFile.name);
     clearInterval(sim);
     document.getElementById('previewProgressPct').textContent = '100%';
     document.getElementById('progressFill').style.width = '100%';
     if (!html) throw new Error('Fișier HTML indisponibil');
-    saveToCache(currentFile.name, html, false);
+    saveToCache(currentFile.name, html);
     currentBlob = html;
-    showHtmlPreview(html, false);
+    showHtmlPreview(html);
     filterFiles();
   } catch(e) {
     clearInterval(sim);
-    showPreviewState('error', false);
+    showPreviewState('error');
     document.getElementById('previewErrorMsg').textContent = 'Eroare: ' + (e.message || 'necunoscută');
   }
 }
 
-function showHtmlPreview(html, isTest) {
-  const frameId = isTest ? 'pdfFrameTest' : 'pdfFrame';
-  const frame   = document.getElementById(frameId);
-  const zoom    = isTest ? currentTestZoom : currentZoom;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const file = isTest ? currentTestFile : currentFile;
+function showHtmlPreview(html) {
+  const frame = document.getElementById('pdfFrame');
+  const zoom  = currentZoom;
+  const file  = currentFile;
 
-  if (isMobile) {
-    // Pe mobil stocăm HTML-ul și deschidem modalul cu 2 opțiuni
-    window._mobHtml    = html;
-    window._mobIsTest  = isTest;
+  if (isMobileDevice()) {
+    window._mobHtml = html;
     var fname = file ? file.name : 'Raport';
     document.getElementById('mobModalName').textContent = fname;
     document.getElementById('mobModal').classList.add('show');
-    mobileBackToList(isTest);
+    mobileBackToList();
   } else {
     const title    = file ? file.name.replace(/\.[^.]+$/, '') : 'Raport SSM';
     const titleTag = '<title>' + title + '</title>';
     let htmlT = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, titleTag);
     if (!htmlT.includes(titleTag)) htmlT = htmlT.replace(/<head>/i, '<head>' + titleTag);
-    const a4Style = '<style>@page{size:A4 portrait!important;margin:1cm 1.5cm!important;}' +
-                    '@media print{html,body{width:210mm!important;}}</style>';
-    htmlT = htmlT.replace('</head>', a4Style + '</head>');
+    htmlT = htmlT.replace('</head>', A4_PRINT_STYLE + '</head>');
     frame.srcdoc    = htmlT;
     frame.className = 'pdf-frame show';
-    showPreviewState(null, isTest);
+    showPreviewState(null);
     if (zoom !== 100) {
       frame.onload = function() {
         try { frame.contentDocument.body.style.zoom = (zoom / 100); } catch(ex) {}
@@ -738,25 +700,24 @@ function downloadCurrent() {
 }
   
 // ── Cache helpers ──
-function getCacheKey(filename, isTest) {
-  var langPrefix = (!isTest && currentLang === 'en') ? 'en_' : '';
-  return (isTest ? LS_TEST_PREFIX : LS_PREFIX) + langPrefix + filename;
+function getCacheKey(filename) {
+  var langPrefix = (currentLang === 'en') ? 'en_' : '';
+  return LS_PREFIX + langPrefix + filename;
 }
 
-function isCached(filename, isTest) {
-  try { return !!localStorage.getItem(getCacheKey(filename, isTest)); } catch(e) { return false; }
+function isCached(filename) {
+  try { return !!localStorage.getItem(getCacheKey(filename)); } catch(e) { return false; }
 }
 
-function saveToCache(filename, content, isTest) {
+function saveToCache(filename, content) {
   try {
-    const key    = getCacheKey(filename, isTest);
-    const prefix = isTest ? LS_TEST_PREFIX : LS_PREFIX;
+    const key = getCacheKey(filename);
     const sizeMB = (content.length * 0.75) / (1024 * 1024);
     let totalMB = 0;
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k.startsWith(prefix)) {
+      if (k.startsWith(LS_PREFIX)) {
         const v = localStorage.getItem(k);
         totalMB += (v.length * 0.75) / (1024 * 1024);
         keys.push({ k, size: (v.length * 0.75) / (1024 * 1024) });
@@ -771,18 +732,13 @@ function saveToCache(filename, content, isTest) {
   } catch(e) {}
 }
 
-function loadFromCache(filename, isTest) {
-  try { return localStorage.getItem(getCacheKey(filename, isTest)); } catch(e) { return null; }
+function loadFromCache(filename) {
+  try { return localStorage.getItem(getCacheKey(filename)); } catch(e) { return null; }
 }
 
 // ── fetchHTML parametrizat ──
-async function fetchHTMLFor(filename, isTest) {
-  var folderParam = '';
-  if (isTest) {
-    folderParam = '&folder=rapoarte_teste';
-  } else if (currentLang === 'en') {
-    folderParam = '&folder=rapoarte_raw_EN';
-  }
+async function fetchHTMLFor(filename) {
+  var folderParam = (currentLang === 'en') ? '&folder=rapoarte_raw_EN' : '';
   const url = GAS_URL + '?action=html&filename=' + encodeURIComponent(filename) +
               folderParam + '&token=' + encodeURIComponent(sessionToken);
   const res = await fetch(url);
@@ -802,158 +758,28 @@ function handlePrefetchDown(el) {
   // prefetch dezactivat
 }
 
-
-
-
-
-
-
-// ═══════════════════════════════════════════════
-// RAPOARTE TESTE
-// ═══════════════════════════════════════════════
-async function loadTeste() {
-  try {
-    const res  = await fetch(GAS_URL + '?action=rapoarte&folder=rapoarte_teste&token=' + encodeURIComponent(sessionToken));
-    const data = await res.json();
-    if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
-    if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
-    allTestFiles = data.files || [];
-    testeLoaded  = true;
-    const badge = document.getElementById('testeBadge');
-    if (allTestFiles.length > 0) { badge.textContent = allTestFiles.length; badge.style.display = 'inline'; }
-    document.getElementById('countBadgeTest').textContent = allTestFiles.length + ' teste';
-    filterTeste();
-  } catch(e) {
-    document.getElementById('fileListTest').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Nu s-au putut încărca rapoartele test.</span></div>';
-  }
-}
-
-function filterTeste() {
-  const q    = document.getElementById('searchInputTest').value.toLowerCase();
-  const sort = document.getElementById('sortSelectTest').value;
-  let list = allTestFiles.filter(f =>
-    (f.name||'').toLowerCase().includes(q) ||
-    (f.location||'').toLowerCase().includes(q) ||
-    (f.nr||'').toLowerCase().includes(q) ||
-    (f.date||'').includes(q)
-  );
-  const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
-  if (sort === 'newest') list.sort((a,b) => { const d=(b.date||'').localeCompare(a.date||''); return d!==0?d:getNr(b)-getNr(a); });
-  else if (sort === 'oldest') list.sort((a,b) => { const d=(a.date||'').localeCompare(b.date||''); return d!==0?d:getNr(a)-getNr(b); });
-  else list.sort((a,b) => a.name.localeCompare(b.name));
-  document.getElementById('countBadgeTest').textContent = list.length + ' / ' + allTestFiles.length + ' teste';
-  renderList(list, true);
-}
-
-function selectTestFile(f) {
-  currentTestFile = f; currentTestBlob = null; currentTestZoom = 100;
-  document.getElementById('previewFilenameTest').textContent = f.name;
-  document.getElementById('previewFilenameTest').className = 'preview-filename';
-  document.getElementById('btnDownloadTest').disabled = false;
-  document.getElementById('btnZoomInTest').disabled = false;
-  document.getElementById('btnZoomOutTest').disabled = false;
-  document.getElementById('btnZoomResetTest').disabled = false;
-  document.getElementById('zoomLevelTest').textContent = '100%';
-  document.getElementById('statNameTest').textContent = f.nr || f.name;
-  document.getElementById('statDateTest').textContent = formatDate(f.date);
-  document.getElementById('statLocationTest').textContent = f.location || '—';
-  document.getElementById('statsBarTest').style.display = 'flex';
-  filterTeste();
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    window._mobHtml   = null;
-    window._mobIsTest = true;
-    document.getElementById('mobModalName').textContent = f.name;
-    document.getElementById('mobModal').classList.add('show');
-    var cached = loadFromCache(f.name, true);
-    if (cached) { window._mobHtml = cached; }
-    else { fetchHTMLFor(f.name, true).then(function(html) { if (html) { saveToCache(f.name, html, true); window._mobHtml = html; } }); }
-  } else {
-    mobileShowPreview(true);
-    previewCurrentTest();
-  }
-}
-
-function zoomPreviewTest(delta) {
-  const frame = document.getElementById('pdfFrameTest');
-  if (!frame.srcdoc && !frame.src) return;
-  if (delta === 0) { currentTestZoom = 100; }
-  else { currentTestZoom = Math.min(300, Math.max(50, currentTestZoom + delta)); }
-  document.getElementById('zoomLevelTest').textContent = currentTestZoom + '%';
-  try { const b = frame.contentDocument && frame.contentDocument.body; if (b) b.style.zoom = (currentTestZoom / 100); } catch(e) {}
-}
-
-async function previewCurrentTest() {
-  if (!currentTestFile) return;
-  if (currentTestBlob) { showHtmlPreview(currentTestBlob, true); return; }
-  const cached = loadFromCache(currentTestFile.name, true);
-  if (cached) { currentTestBlob = cached; showHtmlPreview(cached, true); return; }
-  showPreviewState('loading', true);
-  document.getElementById('previewProgressTest').textContent = currentTestFile.name;
-  document.getElementById('previewProgressPctTest').textContent = '0%';
-  document.getElementById('progressFillTest').style.width = '0%';
-  let simPct = 0;
-  const sim = setInterval(() => {
-    simPct += (85 - simPct) * 0.15;
-    const pct = Math.round(simPct);
-    document.getElementById('previewProgressPctTest').textContent = pct + '%';
-    document.getElementById('progressFillTest').style.width = pct + '%';
-  }, 100);
-  try {
-    const html = await fetchHTMLFor(currentTestFile.name, true);
-    clearInterval(sim);
-    document.getElementById('previewProgressPctTest').textContent = '100%';
-    document.getElementById('progressFillTest').style.width = '100%';
-    if (!html) throw new Error('Fișier HTML indisponibil');
-    saveToCache(currentTestFile.name, html, true);
-    currentTestBlob = html;
-    showHtmlPreview(html, true);
-    filterTeste();
-  } catch(e) {
-    clearInterval(sim);
-    showPreviewState('error', true);
-    document.getElementById('previewErrorMsgTest').textContent = 'Eroare: ' + (e.message || 'necunoscută');
-  }
-}
-
 // ═══════════════════════════════════════════════
 // CSV NORMAL
 // ═══════════════════════════════════════════════
-async function loadCsv() { await _loadCsvFor(false); }
-async function loadCsvTest() { await _loadCsvFor(true); }
-
-async function _loadCsvFor(isTest) {
-  const sfx      = isTest ? 'Test' : '';
-  const wrapId   = 'csvTableWrap' + sfx;
-  const statusId = 'csvStatus' + sfx;
-  const badgeId  = 'csvCountBadge' + sfx;
-  const expBtnId = 'btnExportCsv' + (isTest ? 'Test' : '');
-  document.getElementById(wrapId).innerHTML = '<div class="state-msg"><div class="spinner"></div><span>' + t('loading_csv') + '</span></div>';
-  document.getElementById(statusId).textContent = '';
-  document.getElementById(badgeId).textContent  = '';
-  const folderParam = isTest ? '&folder=rapoarte_teste' : '';
+async function loadCsv() {
+  document.getElementById('csvTableWrap').innerHTML = '<div class="state-msg"><div class="spinner"></div><span>' + t('loading_csv') + '</span></div>';
+  document.getElementById('csvStatus').textContent = '';
+  document.getElementById('csvCountBadge').textContent = '';
   try {
-    const res  = await fetch(GAS_URL + '?action=csv' + folderParam + '&token=' + encodeURIComponent(sessionToken));
+    const res  = await fetch(GAS_URL + '?action=csv&token=' + encodeURIComponent(sessionToken));
     const data = await res.json();
     if (data.status === 'error' && data.message === 'Neautorizat.') { doLogout(); return; }
     if (data.status !== 'success') throw new Error(data.message || 'Eroare server');
     const rows = parseCSV(data.csv);
-    if (rows.length < 2) { document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span>' + t('csv_empty') + '</span></div>'; return; }
-    if (isTest) {
-      csvTestHeaders = rows[0]; csvTestData = rows.slice(1);
-      csvTestLoaded  = true;
-      renderCsvFor(csvTestData, csvTestHeaders, true);
-      document.getElementById(statusId).textContent = csvTestData.length + ' înregistrări · ' + csvTestHeaders.length + ' coloane';
-      document.getElementById(badgeId).textContent  = csvTestData.length + ' rânduri';
-    } else {
-      csvHeaders = rows[0]; csvData = rows.slice(1);
-      csvLoaded  = true;
-      renderCsvFor(csvData, csvHeaders, false);
-      document.getElementById(statusId).textContent = csvData.length + ' ' + t('records') + ' · ' + csvHeaders.length + ' ' + t('columns');
-      document.getElementById(badgeId).textContent  = csvData.length + ' ' + t('rows');
-    }
-    document.getElementById(expBtnId).disabled = false;
+    if (rows.length < 2) { document.getElementById('csvTableWrap').innerHTML = '<div class="state-msg"><span>' + t('csv_empty') + '</span></div>'; return; }
+    csvHeaders = rows[0]; csvData = rows.slice(1);
+    csvLoaded  = true;
+    renderCsvFor(csvData, csvHeaders);
+    document.getElementById('csvStatus').textContent = csvData.length + ' ' + t('records') + ' · ' + csvHeaders.length + ' ' + t('columns');
+    document.getElementById('csvCountBadge').textContent = csvData.length + ' ' + t('rows');
+    document.getElementById('btnExportCsv').disabled = false;
   } catch(e) {
-    document.getElementById(wrapId).innerHTML = '<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: ' + (e.message||'necunoscută') + '</span></div>';
+    document.getElementById('csvTableWrap').innerHTML = '<div class="state-msg"><span style="color:#c0392b">Eroare la încărcarea CSV-ului: ' + (e.message||'necunoscută') + '</span></div>';
   }
 }
 
@@ -976,17 +802,10 @@ function parseCSV(text) {
 function filterCsv() {
   const q        = document.getElementById('csvSearch').value.toLowerCase();
   const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
-  renderCsvFor(filtered, csvHeaders, false);
+  renderCsvFor(filtered, csvHeaders);
   document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' ' + t('rows');
 }
-
-function filterCsvTest() {
-  const q        = document.getElementById('csvSearchTest').value.toLowerCase();
-  const filtered = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
-  renderCsvFor(filtered, csvTestHeaders, true);
-  document.getElementById('csvCountBadgeTest').textContent = filtered.length + ' / ' + csvTestData.length + ' rânduri';
-}
-
+  
 let showComments = false;
 
 function isCommentColumn(headerName) {
@@ -997,21 +816,11 @@ function onToggleComments() {
   showComments = document.getElementById('toggleComments').checked;
   const q = document.getElementById('csvSearch').value.toLowerCase();
   const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
-  renderCsvFor(filtered, csvHeaders, false);
+  renderCsvFor(filtered, csvHeaders);
 }
 
-function onToggleComments() {
-  showComments = document.getElementById('toggleComments').checked;
-  const q = document.getElementById('csvSearch').value.toLowerCase();
-  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
-  renderCsvFor(filtered, csvHeaders, false);
-}
-
-function renderCsvFor(rows, headers, isTest) {
-  const sfx      = isTest ? 'Test' : '';
-  const wrap     = document.getElementById('csvTableWrap' + sfx);
-  const sortCol  = isTest ? csvTestSortCol : csvSortCol;
-  const sortDir  = isTest ? csvTestSortDir : csvSortDir;
+function renderCsvFor(rows, headers) {
+  const wrap = document.getElementById('csvTableWrap');
   if (!rows.length) { wrap.innerHTML = '<div class="state-msg"><span>' + (currentLang === 'en' ? 'No results.' : 'Niciun rezultat.') + '</span></div>'; return; }
 
   const visibleIdx = headers.map((h, i) => i).filter(i => showComments || !isCommentColumn(headers[i]));
@@ -1019,11 +828,11 @@ function renderCsvFor(rows, headers, isTest) {
   let html = '<table class="csv-table"><thead><tr>';
   visibleIdx.forEach(i => {
     const h = headers[i];
-    const cls = sortCol === i ? (sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    const cls = csvSortCol === i ? (csvSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     var handleHtml = (i > 0)
       ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)" ondblclick="event.stopPropagation();autoFitColumn(this,-1)"></div>'
       : '';
-    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ',' + isTest + ')">' +
+    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ')">' +
             handleHtml + h +
             '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)" ondblclick="event.stopPropagation();autoFitColumn(this,1)"></div></th>';
   });
@@ -1044,20 +853,12 @@ function renderCsvFor(rows, headers, isTest) {
   wrap.innerHTML = html;
 }
 
-function sortCsvFor(colIdx, isTest) {
-  if (isTest) {
-    if (csvTestSortCol === colIdx) { csvTestSortDir *= -1; } else { csvTestSortCol = colIdx; csvTestSortDir = 1; }
-    const q   = document.getElementById('csvSearchTest').value.toLowerCase();
-    let rows  = q ? csvTestData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvTestData;
-    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvTestSortDir);
-    renderCsvFor(rows, csvTestHeaders, true);
-  } else {
-    if (csvSortCol === colIdx) { csvSortDir *= -1; } else { csvSortCol = colIdx; csvSortDir = 1; }
-    const q   = document.getElementById('csvSearch').value.toLowerCase();
-    let rows  = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
-    rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
-    renderCsvFor(rows, csvHeaders, false);
-  }
+function sortCsvFor(colIdx) {
+  if (csvSortCol === colIdx) { csvSortDir *= -1; } else { csvSortCol = colIdx; csvSortDir = 1; }
+  const q   = document.getElementById('csvSearch').value.toLowerCase();
+  let rows  = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
+  renderCsvFor(rows, csvHeaders);
 }
 
   function initColResize(e, handle, dir) {
@@ -1122,10 +923,13 @@ function autoFitColumn(handle, dir) {
 // ── Mobile: show/hide list vs preview ──
 function isMobileView() { return window.innerWidth <= 680; }
 
-function mobileShowPreview(isTest) {
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+  
+function mobileShowPreview() {
   if (!isMobileView()) return;
-  const containerId = isTest ? 'content-teste' : 'content-rapoarte';
-  const container = document.getElementById(containerId);
+  const container = document.getElementById('content-rapoarte');
   if (!container) return;
   const sidebar = container.querySelector('.sidebar');
   const preview = container.querySelector('.preview');
@@ -1133,9 +937,8 @@ function mobileShowPreview(isTest) {
   if (preview) preview.classList.add('mobile-show');
 }
 
-function mobileBackToList(isTest) {
-  const containerId = isTest ? 'content-teste' : 'content-rapoarte';
-  const container = document.getElementById(containerId);
+function mobileBackToList() {
+  const container = document.getElementById('content-rapoarte');
   if (!container) return;
   const sidebar = container.querySelector('.sidebar');
   const preview = container.querySelector('.preview');
@@ -1197,10 +1000,8 @@ function _mobOpenUrl(html, print) {
   );
   var w = window.open('', '_blank');
   if (!w) { alert('Permite popup-uri pentru acest site și încearcă din nou.'); return; }
-  var a4Style = '<style>@page{size:A4 portrait!important;margin:1cm 1.5cm!important;}' +
-                '@media print{html,body{width:210mm!important;}</style>';
-  var htmlA4 = htmlWithTitle.replace('</head>', a4Style + '</head>');
-  if (htmlA4 === htmlWithTitle) htmlA4 = a4Style + htmlWithTitle;
+  var htmlA4 = htmlWithTitle.replace('</head>', A4_PRINT_STYLE + '</head>');
+  if (htmlA4 === htmlWithTitle) htmlA4 = A4_PRINT_STYLE + htmlWithTitle;
   w.document.open();
   w.document.write(htmlA4);
   w.document.close();
@@ -1212,20 +1013,18 @@ function _mobOpenUrl(html, print) {
   }
 }
 
-function exportCsv(isTest) {
-  const headers = isTest ? csvTestHeaders : csvHeaders;
-  const data    = isTest ? csvTestData    : csvData;
-  if (!headers.length || !data.length) return;
+function exportCsv() {
+  if (!csvHeaders.length || !csvData.length) return;
   function escVal(v) {
     const s = String(v||'').replace(/"/g, '""');
     return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s + '"' : s;
   }
-  const lines = [headers.map(escVal).join(',')];
-  data.forEach(row => lines.push(row.map(escVal).join(',')));
+  const lines = [csvHeaders.map(escVal).join(',')];
+  csvData.forEach(row => lines.push(row.map(escVal).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
-  a.download = (isTest ? 'centralizator_teste_' : 'centralizator_SSM_') + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'centralizator_SSM_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
 
