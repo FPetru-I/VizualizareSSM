@@ -1130,27 +1130,25 @@ function isMobileView() { return window.innerWidth <= 680; }
 
 function mobileShowPreview(isTest) {
   if (!isMobileView()) return;
-  const layout = isTest
-    ? document.querySelector('#content-teste .rapoarte-layout')
-    : document.querySelector('#content-rapoarte .rapoarte-layout');
-  if (!layout) return;
-  const sidebar = layout.querySelector('.sidebar');
-  const preview = layout.querySelector('.preview');
+  const containerId = isTest ? 'content-teste' : 'content-rapoarte';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sidebar = container.querySelector('.sidebar');
+  const preview = container.querySelector('.preview');
   if (sidebar) sidebar.classList.add('mobile-hide');
   if (preview) preview.classList.add('mobile-show');
 }
 
 function mobileBackToList(isTest) {
-  const layout = isTest
-    ? document.querySelector('#content-teste .rapoarte-layout')
-    : document.querySelector('#content-rapoarte .rapoarte-layout');
-  if (!layout) return;
-  const sidebar = layout.querySelector('.sidebar');
-  const preview = layout.querySelector('.preview');
+  const containerId = isTest ? 'content-teste' : 'content-rapoarte';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sidebar = container.querySelector('.sidebar');
+  const preview = container.querySelector('.preview');
   if (sidebar) sidebar.classList.remove('mobile-hide');
   if (preview) preview.classList.remove('mobile-show');
 }
-
+  
 // ── Mobile modal ──
 function closeMobModal(e) {
   if (e && e.target !== document.getElementById('mobModal')) return;
