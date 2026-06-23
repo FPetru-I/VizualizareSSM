@@ -1,182 +1,174 @@
-Documentație tehnică — Platformă Vizualizare Rapoarte SSM
-Tip fișier: HTML monolitic (HTML + CSS + JavaScript într-un singur fișier)
-Backend: Google Apps Script (GAS), folosit ca proxy de autentificare și acces la GitHub
-Repository sursă date: `RapoarteSSM` pe GitHub, foldere `rapoarte\_raw` (RO) și `rapoarte\_raw\_EN` (EN)
+Platforma Vizualizare Rapoarte SSM
+Tip fisier: HTML monolitic (HTML + CSS + JavaScript intr-un singur fisier)
+Backend: Google Apps Script (GAS), folosit ca proxy de autentificare si acces la GitHub
+Repository sursa date: RapoarteSSM pe GitHub, foldere rapoarte_raw (RO) si rapoarte_raw_EN (EN)
+Aceasta versiune a documentatiei reflecta fisierul curent, dupa eliminarea completa a codului rezidual legat de "rapoarte de test" (tab, functii, variabile de stare, chei de cache si elemente CSS care nu mai aveau nicio legatura cu interfata vizibila).
 ---
-1. Arhitectura generală
-```
-Login (email + parolă)
-        │
-        ▼
-GAS verifică email + parolă → emite token de sesiune
-        │
-        ▼
-Pagina cere lista de rapoarte + CSV-ul centralizator (în paralel)
-        │
-        ▼
-Utilizatorul selectează un raport → GAS citește fișierul HTML din GitHub → afișat în <iframe>
-        │
-        ▼
-Tab separat "Centralizator" → CSV brut parsat și afișat ca tabel interactiv
-```
-Nu există bază de date proprie — toate rapoartele sunt fișiere HTML statice stocate în GitHub, iar centralizatorul e un singur fișier `.csv`. Pagina doar le citește prin GAS și le randează.
+Arhitectura generala
+Login (email + parola)
+in
+v
+GAS verifica email + parola, emite token de sesiune
+in
+v
+Pagina cere lista de rapoarte si CSV-ul centralizator (in paralel)
+in
+v
+Utilizatorul selecteaza un raport, GAS citeste fisierul HTML din GitHub, afisat in iframe
+in
+v
+Tab separat "Centralizator": CSV brut parsat si afisat ca tabel interactiv
+Nu exista baza de date proprie. Toate rapoartele sunt fisiere HTML statice stocate in GitHub, iar centralizatorul e un singur fisier .csv. Pagina doar le citeste prin GAS si le randeaza.
 ---
-2. Autentificare
-2.1 Flux de login (`doLogin()`)
-Necesită email și parolă. Trimite ambele către GAS:
-```
-GAS\_URL?action=login\&password=...\&email=...
-```
-Verificarea parolei e făcută integral pe partea de GAS (hash, nu se vede în acest fișier).
-Verificarea email-ului e făcută server-side, în GAS — pagina trimite email-ul ca parametru simplu, fără validare locală suplimentară înainte de trimitere (în afară de `if (!email || !pw) return;`).
-La succes, GAS returnează un `token`, salvat în `sessionStorage.getItem('ssm\_token')`.
+Autentificare
+2.1 Flux de login, functia doLogin()
+Necesita email si parola. Trimite ambele catre GAS:
+GAS_URL?action=login&password=...&email=...
+Verificarea parolei e facuta integral pe partea de GAS (hash, nu se vede in acest fisier).
+Verificarea email-ului e facuta server-side, in GAS. Pagina trimite email-ul ca parametru simplu, fara validare locala suplimentara inainte de trimitere, in afara de verificarea ca ambele campuri sunt completate.
+La succes, GAS returneaza un token, salvat in sessionStorage sub cheia ssm_token.
 2.2 Persistarea sesiunii
-Token-ul e citit din `sessionStorage` la încărcarea paginii (`init()`); dacă există, utilizatorul e logat automat fără să reintroducă parola — sesiunea ține cât ține tab-ul/fereastra browserului (nu supraviețuiește restart de browser, pentru că `sessionStorage` se șterge la închiderea tab-ului).
-2.3 Logout (`doLogout()`)
-Șterge token-ul din `sessionStorage` și resetează toată starea în memorie (`allFiles`, `currentFile`, `currentBlob`, etc.) înainte de a reveni la ecranul de login.
+Token-ul e citit din sessionStorage la incarcarea paginii, in functia init(). Daca exista, utilizatorul e logat automat fara sa reintroduca parola. Sesiunea tine cat tine tab-ul sau fereastra browserului, pentru ca sessionStorage se sterge la inchiderea tab-ului.
+2.3 Logout, functia doLogout()
+Sterge token-ul din sessionStorage si reseteaza starea in memorie (allFiles, currentFile, currentBlob) inainte de a reveni la ecranul de login.
 ---
-3. Structura paginii — cele 2 tab-uri
-3.1 Tab „Rapoarte" (`#content-rapoarte`)
-Layout pe 2 coloane:
-Sidebar stânga (`.sidebar`) — listă de rapoarte, cu căutare și sortare
-Panou dreapta (`.preview`) — previzualizare HTML a raportului selectat, într-un `<iframe>`
-3.2 Tab „Centralizator" (`#content-csv`)
-Un singur panou (`.csv-panel`) cu:
-bară de căutare globală (toate coloanele)
-toggle „Arată comentariile" (vezi secțiunea 8)
-tabel HTML generat din parsarea CSV-ului, cu sortare și redimensionare de coloane
-Comutarea între tab-uri se face prin `switchTab(tab)`, care ascunde/arată `.tab-content` corespunzător și încarcă datele CSV la prima accesare a tab-ului (`if (tab === 'csv' \&\& !csvLoaded) loadCsv();`).
+Structura paginii, cele doua tab-uri
+3.1 Tab Rapoarte, elementul content-rapoarte
+Layout pe doua coloane:
+Sidebar stanga, clasa sidebar: lista de rapoarte, cu cautare si sortare.
+Panou dreapta, clasa preview: previzualizare HTML a raportului selectat, intr-un iframe.
+3.2 Tab Centralizator, elementul content-csv
+Un singur panou, clasa csv-panel, cu:
+bara de cautare globala pe toate coloanele,
+toggle "Arata comentariile" (vezi sectiunea 8),
+tabel HTML generat din parsarea CSV-ului, cu sortare si redimensionare de coloane.
+Comutarea intre tab-uri se face prin functia switchTab(tab), care ascunde sau arata continutul corespunzator si incarca datele CSV la prima accesare a tabului respectiv.
 ---
-4. Încărcarea listei de rapoarte — `loadRapoarte()`
-La autentificare (sau la reluarea sesiunii), se fac 2 cereri în paralel:
-```javascript
-Promise.all(\[
-  fetch(...\&action=rapoarte...),
-  fetch(...\&action=csv...)
-])
-```
-Lista de fișiere (`action=rapoarte`) — returnează metadate per raport (`name`, `nr`, `date`, `location`), extrase de GAS din numele fișierelor din GitHub.
-CSV-ul centralizator (`action=csv`) — folosit aici doar pentru a extrage coloana `Locatie` și a o asocia fiecărui raport prin numărul de raport (`locatieMap`), pentru a afișa locația exactă (diferită de localitate) în lista de rapoarte.
-Golirea automată a cache-ului local — la fiecare apel de `loadRapoarte()` (deci la fiecare refresh de pagină), toate cheile din `localStorage` cu prefixul `ssm\_pdf\_` sunt șterse. Scopul: garantarea că la fiecare reîncărcare a paginii, rapoartele afișate sunt mereu varianta curentă din GitHub, nu o versiune veche cache-uită local.
+Incarcarea listei de rapoarte, functia loadRapoarte()
+La autentificare, sau la reluarea sesiunii, se fac doua cereri in paralel:
+fetch catre actiunea rapoarte
+fetch catre actiunea csv
+Lista de fisiere (actiunea rapoarte) returneaza metadate per raport: nume, numar, data, localitate, extrase de GAS din numele fisierelor din GitHub.
+CSV-ul centralizator (actiunea csv) e folosit aici doar pentru a extrage coloana Locatie si a o asocia fiecarui raport prin numarul de raport, pentru a afisa locatia exacta in lista de rapoarte.
+Golirea automata a cache-ului local: la fiecare apel de loadRapoarte(), deci la fiecare refresh de pagina, toate cheile din localStorage cu prefixul ssm_pdf_ sunt sterse. Scopul este garantarea ca, la fiecare reincarcare a paginii, rapoartele afisate sunt mereu varianta curenta din GitHub, nu o versiune veche cache-uita local.
 ---
-5. Lista de rapoarte — căutare, sortare, randare
-5.1 `filterFiles()`
-Filtrează `allFiles` (toată lista încărcată) pe baza textului din `#searchInput`, căutând în `name`, `location`, `nr`, `date` simultan. Sortează crescător sau descrescător după numărul de raport (extras din `nr` prin `parseInt(...replace(/\[^0-9]/g,''))`), nu alfabetic.
-5.2 `renderList(files, isTest)`
-Generează HTML-ul listei. Fiecare element (`.file-item`) include:
-iconiță document
-nume fișier + indicator verde (●) dacă fișierul e deja în cache local
-metadate: dată formatată (`formatDate`), localitate, locație
-Parametrul `isTest` e un rest arhitectural pentru un sistem de „rapoarte de test" care nu mai pare a fi folosit activ în acest fișier (funcțiile `loadTeste`, `selectTestFile` etc. există dar nu sunt conectate la niciun tab vizibil în HTML-ul curent) — de verificat dacă acest cod mort poate fi eliminat într-o curățare viitoare.
+Lista de rapoarte, cautare, sortare, randare
+5.1 Functia filterFiles()
+Filtreaza allFiles pe baza textului din campul de cautare, cautand simultan in nume, localitate, numar de raport si data. Sorteaza crescator sau descrescator dupa numarul de raport, extras prin parseInt, nu alfabetic.
+5.2 Functia renderList(files)
+Genereaza HTML-ul listei. Fiecare element include:
+iconita document,
+nume fisier, plus un indicator verde daca fisierul e deja in cache local,
+metadate: data formatata, localitate, locatie.
 ---
-6. Previzualizarea unui raport
-6.1 Selectarea unui raport — `selectFile(f)`
-Detectează dispozitivul prin `navigator.userAgent`:
-Desktop → `previewCurrent()` încarcă direct HTML-ul în iframe
-Mobil (iPhone/iPad/Android) → afișează imediat modalul cu 2 opțiuni (`#mobModal`), în timp ce HTML-ul se descarcă în fundal (`window.\_mobHtml`)
-6.2 `previewCurrent()` — încărcare cu cache
-Dacă raportul e deja în `currentBlob` (memorie) → randează direct.
-Dacă e în `localStorage` (cache) → randează din cache.
-Altfel → `fetchHTMLFor()` descarcă din GitHub prin GAS, salvează în cache (`saveToCache`), apoi randează.
-O bară de progres simulată (`simPct`) crește progresiv către 85% în timp ce se așteaptă răspunsul rețelei, apoi sare la 100% când conținutul ajunge — pur cosmetic, nu reflectă progresul real al descărcării.
-6.3 `showHtmlPreview()` — randarea efectivă
-Injectează `<title>` cu numele fișierului (fără extensie) în HTML-ul primit.
-Injectează forțat un stil `@page { size: A4 portrait; }` pentru consistență la print, indiferent de stilurile proprii ale raportului.
-Setează rezultatul ca `iframe.srcdoc`.
-Aplică nivelul de zoom curent (`currentZoom`) prin `iframe.contentDocument.body.style.zoom`.
+Previzualizarea unui raport
+6.1 Selectarea unui raport, functia selectFile(f)
+Detecteaza dispozitivul prin functia centralizata isMobileDevice() (vezi sectiunea 14):
+Pe desktop, previewCurrent() incarca direct HTML-ul in iframe.
+Pe mobil, se afiseaza imediat modalul cu doua optiuni, in timp ce HTML-ul se descarca in fundal, stocat temporar in window._mobHtml.
+6.2 Functia previewCurrent(), incarcare cu cache
+Daca raportul e deja in currentBlob, in memorie, se randeaza direct.
+Daca e in localStorage, se randeaza din cache.
+Altfel, fetchHTMLFor() descarca din GitHub prin GAS, salveaza in cache prin saveToCache, apoi randeaza.
+O bara de progres simulata creste progresiv catre optzecisicinci la suta in timp ce se asteapta raspunsul retelei, apoi sare la o suta la suta cand continutul ajunge. Aceasta bara e pur cosmetica, nu reflecta progresul real al descarcarii.
+6.3 Functia showHtmlPreview(html), randarea efectiva
+Injecteaza titlul, fara extensie, in HTML-ul primit.
+Injecteaza fortat un stil de pagina A4, prin constanta A4_PRINT_STYLE, pentru consistenta la print, indiferent de stilurile proprii ale raportului.
+Seteaza rezultatul ca iframe.srcdoc.
+Aplica nivelul de zoom curent prin iframe.contentDocument.body.style.zoom.
 ---
-7. Cache local (`localStorage`)
-7.1 Chei și prefixe
-`LS\_PREFIX = 'ssm\_pdf\_'` — rapoarte normale
-`LS\_TEST\_PREFIX = 'ssm\_test\_'` — rapoarte test (cod rezidual, vezi secțiunea 5.2)
-`LS\_MAX\_MB = 4` — limita totală de spațiu alocat cache-ului
-7.2 `getCacheKey(filename, isTest)`
-Cheia include un prefix de limbă: dacă `currentLang === 'en'`, cheia devine `ssm\_pdf\_en\_{filename}`. Astfel versiunile RO și EN ale aceluiași raport sunt cache-uite separat, fără să se suprascrie una pe alta.
-7.3 `saveToCache()` — eviction LRU simplificat
-Înainte de a salva un fișier nou, calculează spațiul total ocupat de cache (aproximat din lungimea string-ului × 0.75, simulând raportul base64→bytes). Dacă adăugarea noului fișier ar depăși `LS\_MAX\_MB`, șterge cele mai vechi chei (`keys.shift()`, ordine de inserare, nu de utilizare) până se face loc.
+Cache local, localStorage
+7.1 Chei si prefixe
+LS_PREFIX, cu valoarea ssm_pdf_, e singurul prefix de cache folosit in versiunea curenta.
+LS_MAX_MB, cu valoarea patru, e limita totala de spatiu alocat cache-ului.
+7.2 Functia getCacheKey(filename)
+Cheia include un prefix de limba: daca currentLang este en, cheia devine ssm_pdf_en_ urmat de numele fisierului. Astfel versiunile RO si EN ale aceluiasi raport sunt cache-uite separat, fara sa se suprascrie una pe alta.
+7.3 Functia saveToCache(filename, content), eviction simplificat
+Inainte de a salva un fisier nou, se calculeaza spatiul total ocupat de cache, aproximat din lungimea string-ului inmultita cu zero virgula sapte cinci, simuland raportul intre lungimea base64 si numarul real de bytes. Daca adaugarea noului fisier ar depasi LS_MAX_MB, se sterg cele mai vechi chei, in ordinea de inserare, nu de utilizare, pana se face loc.
 ---
-8. Comutarea limbă RO/EN
+Comutarea limba RO si EN
 8.1 Mecanism
-`currentLang` controlează:
-traducerea textelor din interfață (`I18N`, `applyLang()`, `t(key)`)
-folderul din care se descarcă rapoartele (`fetchHTMLFor`: `\&folder=rapoarte\_raw\_EN` dacă `currentLang === 'en'`)
-prefixul cheii de cache (secțiunea 7.2)
-Preferința de limbă e salvată persistent în `localStorage.getItem('ssm\_lang')` și restaurată la încărcarea paginii (independent de sesiunea de login).
-8.2 `setLang(lang)`
+Variabila currentLang controleaza:
+traducerea textelor din interfata, prin obiectul I18N si functiile applyLang si t,
+folderul din care se descarca rapoartele, in fetchHTMLFor, care adauga parametrul de folder rapoarte_raw_EN daca currentLang este en,
+prefixul cheii de cache, descris in sectiunea sapte punctul doi.
+Preferinta de limba e salvata persistent in localStorage, sub cheia ssm_lang, si restaurata la incarcarea paginii, independent de sesiunea de login.
+8.2 Functia setLang(lang)
 La comutare:
-Actualizează `currentLang`, salvează preferința.
-Re-traduce toată interfața (`applyLang()`).
-Resetează `currentBlob` la `null` și șterge din cache varianta RO a raportului curent — pentru a forța o redescărcare din folderul corect de limbă (`previewCurrent()` e reapelat automat).
-Important: sistemul de traducere RO/EN se aplică doar interfeței și raportului afișat momentan. CSV-ul centralizator (tab-ul „Centralizator") nu are o variantă EN — `loadCsv()` citește mereu același `centralizator.csv`, independent de `currentLang`.
+se actualizeaza currentLang si se salveaza preferinta,
+se re-traduce toata interfata prin applyLang,
+se reseteaza currentBlob la null si se sterge din cache varianta curenta a raportului afisat, pentru a forta o redescarcare din folderul corect de limba. previewCurrent() e reapelat automat dupa aceasta resetare.
+De retinut: sistemul de traducere RO si EN se aplica doar interfetei si raportului afisat momentan. CSV-ul centralizator, din tabul Centralizator, nu are o varianta EN. loadCsv() citeste mereu acelasi centralizator.csv, independent de currentLang.
 ---
-9. Descărcare / Printare raport
-9.1 Desktop — `downloadCurrent()`
-Nu deschide un tab nou și nu generează un fișier separat — printează direct conținutul iframe-ului deja încărcat:
-```javascript
-frame.contentDocument.title = fileName;  // numele apare corect în dialogul de print
-frame.contentWindow.print();
-```
-Dacă iframe-ul nu are încă raportul încărcat, apelează mai întâi `previewCurrent()` și abia după print, cu un delay de 600ms pentru randare.
-9.2 Mobil — `\_mobOpenUrl(html, print)`
-Spre diferență de desktop, pe mobil se deschide un tab nou (`window.open('', '\_blank')`), în care se scrie HTML-ul cu `document.write()`. Motivul pentru abordarea diferită: pe mobil nu există un iframe vizibil de printat direct, deci raportul trebuie expus ca document de prim-nivel al unui tab nou pentru ca dialogul de print al sistemului să-l recunoască corect.
-Același stil A4 forțat (`@page`) e injectat și aici, separat de injectarea din `showHtmlPreview()`.
+Descarcare si printare raport
+9.1 Desktop, functia downloadCurrent()
+Nu deschide un tab nou si nu genereaza un fisier separat. Printeaza direct continutul iframe-ului deja incarcat, setand mai intai titlul documentului din iframe la numele fisierului, astfel incat acesta sa apara corect in dialogul de salvare ca PDF al browserului. Daca iframe-ul nu are inca raportul incarcat, se apeleaza mai intai previewCurrent() si abia apoi se printeaza, cu o intarziere de sase sute de milisecunde pentru randare.
+9.2 Mobil, functia _mobOpenUrl(html, print)
+Spre diferenta de desktop, pe mobil se deschide un tab nou, in care se scrie HTML-ul direct cu document.write. Motivul pentru abordarea diferita: pe mobil nu existe un iframe vizibil de printat direct, deci raportul trebuie expus ca document de prim nivel al unui tab nou pentru ca dialogul de print al sistemului sa il recunoasca corect.
+Acelasi stil A4 fortat, prin constanta A4_PRINT_STYLE, e injectat si aici, reutilizand exact aceeasi definitie ca cea folosita la previzualizarea pe desktop.
 ---
-10. Modal mobil cu 2 opțiuni (`#mobModal`)
-Pe dispozitive mobile, selectarea unui raport nu randează direct — afișează un modal cu:
-„Vizualizare" (`mobActionView()`) → deschide raportul într-un tab nou, fără print
-„Descarcă / Printează" (`mobActionDownload()`) → deschide raportul și declanșează dialogul de print
-Ambele funcții gestionează cazul în care HTML-ul nu s-a descărcat încă (polling la 400ms cu animație de puncte „Se încarcă...", `window.\_mobHtml` setat asincron din `selectFile`/`selectTestFile`).
+Modalul mobil cu doua optiuni
+Pe dispozitive mobile, selectarea unui raport nu randeaza direct, ci afiseaza un modal cu doua butoane:
+Vizualizare, functia mobActionView(), care deschide raportul intr-un tab nou, fara print.
+Descarca sau Printeaza, functia mobActionDownload(), care deschide raportul si declanseaza dialogul de print.
+Ambele functii gestioneaza cazul in care HTML-ul nu s-a descarcat inca, printr-un polling la patru sute de milisecunde, cu o animatie simpla de puncte care indica incarcarea. Continutul descarcat e stocat temporar in window._mobHtml, setat asincron din selectFile.
 ---
-11. Tab Centralizator — parsare și randare CSV
-11.1 `parseCSV(text)`
-Parser CSV manual, caracter cu caracter, care gestionează corect câmpurile încadrate în ghilimele (inclusiv ghilimele escapate `""`) și virgulele din interiorul câmpurilor citate. Nu folosește nicio librărie externă.
-11.2 `renderCsvFor(rows, headers, isTest)`
-Construiește un `<table>` HTML complet de la zero la fiecare randare (nu actualizează incremental DOM-ul existent). Pentru fiecare celulă, valorile `DA`/`NU`/`N/A` sunt înlocuite cu badge-uri colorate (`.badge-da`, `.badge-nu`, `.badge-na`).
-11.3 Filtrarea coloanelor de comentarii — `showComments`, `isCommentColumn()`
-```javascript
-function isCommentColumn(headerName) {
-  return (headerName || '').toUpperCase().includes('COMENTARIU');
-}
-```
-Implicit, coloanele care conțin „COMENTARIU" în nume sunt ascunse din tabel (pentru lizibilitate — centralizatorul are sute de coloane Răspuns/Comentariu alternante). Checkbox-ul „Arată comentariile" (`#toggleComments`) le readuce. Lista de indici vizibili e recalculată la fiecare randare:
-```javascript
-const visibleIdx = headers.map((h, i) => i).filter(i => showComments || !isCommentColumn(headers\[i]));
-```
-> \*\*Notă pentru mentenanță:\*\* funcția `onToggleComments()` e definită de două ori identic în fișierul curent (duplicat literal) — a doua declarație suprascrie prima fără efect practic, dar e cod redundant de eliminat la o curățare.
-11.4 Sortare — `sortCsvFor(colIdx, isTest)`
-Click pe header sortează crescător; un al doilea click pe aceeași coloană inversează direcția (`csvSortDir \*= -1`). Sortarea e alfanumerică (`localeCompare` cu opțiunea `numeric:true`), deci numerele din text sunt comparate corect (ex. „10" după „9", nu lexicografic).
-11.5 Export CSV — `exportCsv()`
-Reconstruiește CSV-ul din `csvHeaders`/`csvData` păstrate în memorie (nu din ce e randat pe ecran — deci exportul include toate coloanele, indiferent de starea toggle-ului „Arată comentariile"), cu BOM UTF-8 (`\\uFEFF`) pentru compatibilitate Excel, și declanșează descărcarea ca fișier `.csv` cu data curentă în nume.
+Tab Centralizator, parsare si randare CSV
+11.1 Functia parseCSV(text)
+Parser CSV manual, caracter cu caracter, care gestioneaza corect campurile incadrate in ghilimele, inclusiv ghilimelele escapate, si virgulele din interiorul campurilor citate. Nu foloseste nicio librarie externa.
+11.2 Functia renderCsvFor(rows, headers)
+Construieste un tabel HTML complet de la zero la fiecare randare, nu actualizeaza incremental DOM-ul existent. Pentru fiecare celula, valorile DA, NU si N/A sunt inlocuite cu insigne colorate.
+11.3 Filtrarea coloanelor de comentarii, variabila showComments si functia isCommentColumn
+Implicit, coloanele care contin cuvantul COMENTARIU in nume sunt ascunse din tabel, pentru lizibilitate, intrucat centralizatorul are sute de coloane de tip Raspuns si Comentariu alternante. Checkbox-ul "Arata comentariile" le readuce. Lista de indici vizibili e recalculata la fiecare randare, pe baza starii curente a variabilei showComments.
+11.4 Sortare, functia sortCsvFor(colIdx)
+Click pe header sorteaza crescator. Un al doilea click pe aceeasi coloana inverseaza directia. Sortarea e alfanumerica, folosind localeCompare cu optiunea numeric activata, deci numerele din text sunt comparate corect, de exemplu zece dupa noua, nu in ordine lexicografica.
+11.5 Export CSV, functia exportCsv()
+Reconstruieste CSV-ul din csvHeaders si csvData, pastrate integral in memorie, nu din ce e randat pe ecran. Exportul include deci toate coloanele, indiferent de starea toggle-ului "Arata comentariile". Fisierul exportat include un marcaj BOM UTF-8 pentru compatibilitate cu Excel, si declanseaza descarcarea ca fisier CSV, cu data curenta in nume.
 ---
-12. Redimensionarea coloanelor (drag + auto-fit)
-12.1 Handle-uri de redimensionare
-Fiecare `<th>` are 2 zone de drag (`.col-resize-handle`), poziționate la marginea stânga și dreapta a coloanei, care se extind vizual și dincolo de marginea coloanei (`right:-10px; width:20px`) pentru o zonă de prindere mai ușoară cu mouse-ul. Handle-ul din stânga al coloanei N redimensionează de fapt coloana N-1 (`handle.parentElement.previousElementSibling`), astfel încât drag-ul pe orice graniță vizuală dintre 2 coloane mereu redimensionează coloana din stânga graniței.
-12.2 `initColResize(e, handle, dir)`
-Pattern clasic de drag: la `mousedown` se înregistrează listeneri globali `mousemove`/`mouseup` pe `document`, care actualizează `th.style.width/minWidth/maxWidth` în timp real și se dezînregistrează la `mouseup`. Lățimea minimă e limitată la 40px.
-12.3 `autoFitColumn(handle, dir)` — dublu-click
-La dublu-click pe un handle, lățimea coloanei e recalculată automat pentru a încăpea conținutul cel mai larg, folosind un `<canvas>` offscreen și `ctx.measureText()` pentru a măsura precis lățimea textului (header + toate valorile din coloana respectivă, inclusiv `title`-ul complet al celulei dacă textul e altfel trunchiat vizual), plus 28px padding de siguranță.
+Redimensionarea coloanelor, drag si auto-fit
+12.1 Manere de redimensionare
+Fiecare antet de coloana are doua zone de tip drag, pozitionate la marginea stanga si dreapta a coloanei, care se extind vizual si dincolo de marginea coloanei pentru o zona de prindere mai usoara cu mouse-ul. Manerul din stanga al unei coloane redimensioneaza de fapt coloana precedenta, astfel incat tragerea pe orice granita vizuala dintre doua coloane mereu redimensioneaza coloana din stanga granitei.
+12.2 Functia initColResize(e, handle, dir)
+Pattern clasic de drag: la apasarea butonului mouse-ului se inregistreaza listeneri globali de miscare si de eliberare pe document, care actualizeaza latimea coloanei in timp real si se dezinregistreaza la eliberarea butonului. Latimea minima e limitata la patruzeci de pixeli.
+12.3 Functia autoFitColumn(handle, dir), dublu-click
+La dublu-click pe un maner, latimea coloanei e recalculata automat pentru a incapea continutul cel mai larg, folosind un canvas offscreen si functia measureText pentru a masura precis latimea textului, atat headerul cat si toate valorile din coloana respectiva, plus un spatiu de siguranta de douazecisiopt de pixeli.
 ---
-13. Responsive / comportament mobil
+Responsive, comportament pe mobil
 13.1 Breakpoint
-`@media(max-width:680px)` schimbă layout-ul sidebar+preview din orizontal (side-by-side) în vertical, cu doar unul vizibil la un moment dat (`mobile-hide`/`mobile-show`).
-13.2 `mobileShowPreview()` / `mobileBackToList()`
-Comută clasele `.mobile-hide`/`.mobile-show` pe `.sidebar`/`.preview` din interiorul containerului tab-ului curent (`#content-rapoarte` sau `#content-teste`). Aceste funcții sunt apelate automat din `selectFile`/`selectTestFile`, dar — de notat — nu există în acest fișier niciun buton vizibil „Înapoi la listă" pe mobil; revenirea la listă pe ecrane mici se face implicit doar prin selectarea unui alt raport sau prin navigarea browserului (back), nu printr-un control dedicat în interfață.
+Media query-ul pentru latimi sub sase sute optzeci de pixeli schimba layout-ul sidebar si preview din orizontal, side-by-side, in vertical, cu doar unul vizibil la un moment dat.
+13.2 Functiile mobileShowPreview() si mobileBackToList()
+Comuta clasele de afisare pe sidebar si preview din interiorul containerului tabului Rapoarte. Aceste functii sunt apelate automat din selectFile, dar nu exista in acest fisier niciun buton vizibil "Inapoi la lista" pe mobil. Revenirea la lista pe ecrane mici se face implicit doar prin selectarea unui alt raport sau prin navigarea browserului inapoi, nu printr-un control dedicat in interfata.
 ---
-14. Detecție mobil prin User-Agent
-Folosit consecvent în 3 locuri (`selectFile`, `selectTestFile`, `showHtmlPreview`):
-```javascript
-/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-```
-Nu există o singură funcție/constantă centralizată pentru această verificare — e duplicată identic de 3 ori. O eventuală refactorizare ar putea extrage-o într-o funcție `isMobileDevice()`.
+Detectia dispozitivelor mobile, functia isMobileDevice()
+Centralizata intr-o singura functie, reutilizata in toate locurile care au nevoie de aceasta verificare:
+function isMobileDevice() {
+return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+Inainte de curatarea codului, aceasta verificare era duplicata identic in trei locuri diferite. Centralizarea elimina riscul ca o eventuala modificare viitoare a logicii de detectie sa fie aplicata doar partial.
 ---
-15. Internaționalizare (I18N)
-Structură simplă, plată: `I18N.ro` și `I18N.en` sunt obiecte cu aceleași chei, valorile fiind textele traduse. `t(key)` face fallback la română dacă cheia nu există în limba curentă sau dacă limba e necunoscută.
-`applyLang()` aplică traducerile pe baza atributelor `data-i18n` (text), `data-i18n-placeholder` (placeholder input), `data-i18n-title` (atribut `title`), parcurgând tot DOM-ul cu `querySelectorAll` la fiecare comutare de limbă — nu există binding reactiv, traducerea e o trecere completă peste DOM de fiecare dată.
+Internationalizare, I18N
+Structura simpla, plata: I18N.ro si I18N.en sunt obiecte cu aceleasi chei, valorile fiind textele traduse. Functia t(key) face fallback la romana daca cheia nu exista in limba curenta sau daca limba e necunoscuta.
+Functia applyLang() aplica traducerile pe baza atributelor data-i18n pentru text, data-i18n-placeholder pentru placeholder-ul campurilor de input, si data-i18n-title pentru atributul title, parcurgand tot DOM-ul la fiecare comutare de limba. Nu exista binding reactiv, traducerea e o trecere completa peste DOM de fiecare data cand se schimba limba.
 ---
-16. Note pentru mentenanță viitoare
-Cod rezidual „teste": funcțiile `loadTeste`, `filterTeste`, `selectTestFile`, `previewCurrentTest`, `zoomPreviewTest` și variabilele `allTestFiles`/`currentTestFile`/`testeLoaded` există complet funcțional, dar nu sunt conectate la niciun tab vizibil în HTML-ul curent (nu există `#tab-teste` sau `#content-teste` în markup). Sigur de eliminat dacă funcționalitatea „rapoarte de test" a fost definitiv abandonată, sau de reconectat dacă a fost doar temporar dezactivată.
-`onToggleComments()` duplicată — a doua definiție e identică cu prima, fără efect funcțional, dar adaugă confuzie la citire.
-Detecția de mobil repetată de 3 ori — candidat pentru extragere într-o singură funcție.
-CSV-ul nu are variantă EN — la comutarea pe engleză, doar rapoartele individuale se traduc (din folderul `rapoarte\_raw\_EN`); tabul Centralizator rămâne mereu în română, indiferent de `currentLang`. De clarificat dacă acesta e comportamentul intenționat pe termen lung.
-Export CSV exportă mereu toate coloanele, inclusiv comentariile, independent de starea toggle-ului de afișare — comportament intenționat (export complet), dar trebuie comunicat clar utilizatorilor care se bazează vizual pe toggle.
-Stilul A4 forțat la print (`@page{size:A4}`) e injectat în 2 locuri diferite (`showHtmlPreview` pentru desktop, `\_mobOpenUrl` pentru mobil) cu cod aproape identic — candidat pentru extragere într-o singură constantă/funcție reutilizabilă.
+Stilul A4 fortat la print, constanta A4_PRINT_STYLE
+Definita o singura data, la nivel global:
+const A4_PRINT_STYLE = stilul CSS care forteaza marimea paginii A4 portrait si latimea de douazecesizeceminuti la print.
+Aceasta constanta e reutilizata identic in doua locuri: la previzualizarea pe desktop, in showHtmlPreview, si la deschiderea raportului pe mobil, in _mobOpenUrl. Inainte de curatarea codului, aceasta definitie era duplicata, cu o mica diferenta: versiunea folosita pe mobil avea o paranteza inchisa lipsa in regula media print, ceea ce putea produce CSS invalid. Centralizarea intr-o singura constanta elimina si aceasta inconsistenta.
+---
+Functionalitate eliminata fata de versiunile anterioare
+Aceasta sectiune documenteaza ce a fost scos din pagina, pentru context istoric si pentru a evita reintroducerea accidentala a unor referinte la cod care nu mai exista.
+A fost eliminat complet sistemul de "rapoarte de test", care includea:
+un tab separat in interfata, cu propriul continut si stilizare distincta,
+o lista proprie de fisiere de test, incarcata separat de lista principala,
+un CSV centralizator de test, separat de cel principal,
+chei de cache cu prefix propriu,
+toate functiile asociate: incarcarea listei de test, filtrarea, selectarea unui fisier de test, zoom separat, previzualizare separata, incarcarea si filtrarea CSV-ului de test,
+toate elementele CSS asociate, inclusiv variabilele de culoare dedicate si stilurile pentru elementele de lista marcate ca fiind de test,
+un modal mobil care, in versiunile anterioare, retinea separat daca fisierul deschis era unul de test.
+Toate functiile ramase in pagina care anterior acceptau un parametru boolean pentru a alege intre fluxul normal si fluxul de test au fost simplificate, eliminand acel parametru. Aceasta afecteaza, printre altele, functiile de gestionare a cache-ului, functia de descarcare a continutului HTML al unui raport, functiile de randare si sortare a tabelului CSV, si functiile de afisare sau ascundere a panourilor pe ecrane mici.
+A fost eliminata si o variabila de stare nefolosita, gandita initial pentru o functionalitate de preincarcare a rapoartelor la trecerea cursorului peste un element din lista, functionalitate care nu a fost niciodata implementata efectiv in pagina.
+---
+Note pentru mentenanta viitoare
+CSV-ul nu are varianta EN: la comutarea pe engleza, doar rapoartele individuale se traduc, din folderul rapoarte_raw_EN. Tabul Centralizator ramane mereu in romana, indiferent de limba selectata. Daca acest comportament nu e cel dorit pe termen lung, ar fi nevoie de un fisier CSV separat in engleza, generat la trimiterea raportului din formular, plus o modificare pe partea de GAS pentru a accepta un parametru de limba la citirea centralizatorului.
+Export CSV exporta mereu toate coloanele, inclusiv comentariile, independent de starea toggle-ului de afisare. Acesta e un comportament intentionat, de export complet, dar trebuie comunicat clar utilizatorilor care se bazeaza vizual pe toggle si ar putea presupune ca exportul reflecta ce vad pe ecran.
+Bara de progres din previzualizare e cosmetica, nu reflecta progresul real al descarcarii. Daca in viitor se doreste o bara de progres reala, ar fi nevoie de expunerea progresului de descarcare din raspunsul fetch, ceea ce necesita o abordare diferita fata de simpla citire a corpului raspunsului ca JSON.
