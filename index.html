@@ -849,6 +849,12 @@ function isCommentColumn(headerName) {
   return (headerName || '').toUpperCase().includes('COMENTARIU');
 }
 
+function isAnswerColumn(headerName) {
+  var h = (headerName || '');
+  // Coloanele "Raspuns" sunt cele de tip "1.1 - text intrebare..." sau "14.1 - text..." (NU comentariu, NU meta)
+  return /^\d+\.\d+\s*-/.test(h.trim());
+}
+  
 function onToggleComments() {
   showComments = document.getElementById('toggleComments').checked;
   const q = document.getElementById('csvSearch').value.trim();
@@ -862,14 +868,16 @@ function renderCsvFor(rows, headers) {
 
   const visibleIdx = headers.map((h, i) => i).filter(i => showComments || !isCommentColumn(headers[i]));
 
-  let html = '<table class="csv-table"><thead><tr>';
-  visibleIdx.forEach(i => {
+   let html = '<table class="csv-table"><thead><tr>';
+    visibleIdx.forEach(i => {
     const h = headers[i];
     const cls = csvSortCol === i ? (csvSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     var handleHtml = (i > 0)
       ? '<div class="col-resize-handle col-resize-left" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,-1)" ondblclick="event.stopPropagation();autoFitColumn(this,-1)"></div>'
       : '';
-    html += '<th class="' + cls + '" onclick="sortCsvFor(' + i + ')">' +
+    var isAnswerCol = isAnswerColumn(h);
+    var styleAttr = isAnswerCol ? ' style="width:64px;min-width:64px;max-width:64px;"' : '';
+    html += '<th class="' + cls + '"' + styleAttr + ' onclick="sortCsvFor(' + i + ')">' +
             handleHtml + h +
             '<div class="col-resize-handle" onclick="event.stopPropagation()" onmousedown="initColResize(event,this,1)" ondblclick="event.stopPropagation();autoFitColumn(this,1)"></div></th>';
   });
@@ -951,6 +959,7 @@ function autoFitColumn(handle, dir) {
   // Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
   var newW = Math.ceil(maxWidth) + 28;
   newW = Math.max(40, newW);
+  newW = Math.min(newW, 480); // plafon pentru headere foarte lungi (intrebari complete)
 
   th.style.width = newW + 'px';
   th.style.minWidth = newW + 'px';
