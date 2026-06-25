@@ -2,7 +2,6 @@ Platforma Vizualizare Rapoarte SSM
 Tip fisier: HTML monolitic (HTML + CSS + JavaScript intr-un singur fisier)
 Backend: Google Apps Script (GAS), folosit ca proxy de autentificare si acces la GitHub
 Repository sursa date: RapoarteSSM pe GitHub, foldere `rapoarte_raw` (RO) si `rapoarte_raw_EN` (EN)
-Aceasta versiune a documentatiei reflecta fisierul curent, dupa eliminarea completa a codului rezidual legat de "rapoarte de test" (tab, functii, variabile de stare, chei de cache si elemente CSS care nu mai aveau nicio legatura cu interfata vizibila).
 ---
 1. Arhitectura generala
 ```
@@ -162,20 +161,6 @@ const A4_PRINT_STYLE = /* stilul CSS care forteaza marimea paginii A4 portrait s
 ```
 Aceasta constanta e reutilizata identic in doua locuri: la previzualizarea pe desktop, in `showHtmlPreview`, si la deschiderea raportului pe mobil, in `_mobOpenUrl`. Inainte de curatarea codului, aceasta definitie era duplicata, cu o mica diferenta: versiunea folosita pe mobil avea o paranteza inchisa lipsa in regula media print, ceea ce putea produce CSS invalid. Centralizarea intr-o singura constanta elimina si aceasta inconsistenta.
 ---
-17. Functionalitate eliminata fata de versiunile anterioare
-Aceasta sectiune documenteaza ce a fost scos din pagina, pentru context istoric si pentru a evita reintroducerea accidentala a unor referinte la cod care nu mai exista.
-A fost eliminat complet sistemul de "rapoarte de test", care includea:
-un tab separat in interfata, cu propriul continut si stilizare distincta,
-o lista proprie de fisiere de test, incarcata separat de lista principala,
-un CSV centralizator de test, separat de cel principal,
-chei de cache cu prefix propriu,
-toate functiile asociate: incarcarea listei de test, filtrarea, selectarea unui fisier de test, zoom separat, previzualizare separata, incarcarea si filtrarea CSV-ului de test,
-toate elementele CSS asociate, inclusiv variabilele de culoare dedicate si stilurile pentru elementele de lista marcate ca fiind de test,
-un modal mobil care, in versiunile anterioare, retinea separat daca fisierul deschis era unul de test.
-Toate functiile ramase in pagina care anterior acceptau un parametru boolean pentru a alege intre fluxul normal si fluxul de test au fost simplificate, eliminand acel parametru. Aceasta afecteaza, printre altele, functiile de gestionare a cache-ului, functia de descarcare a continutului HTML al unui raport, functiile de randare si sortare a tabelului CSV, si functiile de afisare sau ascundere a panourilor pe ecrane mici.
-A fost eliminata si o variabila de stare nefolosita, gandita initial pentru o functionalitate de preincarcare a rapoartelor la trecerea cursorului peste un element din lista, functionalitate care nu a fost niciodata implementata efectiv in pagina.
----
 18. Note pentru mentenanta viitoare
-CSV-ul nu are varianta EN: la comutarea pe engleza, doar rapoartele individuale se traduc, din folderul `rapoarte_raw_EN`. Tabul Centralizator ramane mereu in romana, indiferent de limba selectata. Daca acest comportament nu e cel dorit pe termen lung, ar fi nevoie de un fisier CSV separat in engleza, generat la trimiterea raportului din formular, plus o modificare pe partea de GAS pentru a accepta un parametru de limba la citirea centralizatorului.
 Export CSV exporta mereu toate coloanele, inclusiv comentariile, independent de starea toggle-ului de afisare. Acesta e un comportament intentionat, de export complet, dar trebuie comunicat clar utilizatorilor care se bazeaza vizual pe toggle si ar putea presupune ca exportul reflecta ce vad pe ecran.
 Bara de progres din previzualizare e cosmetica, nu reflecta progresul real al descarcarii. Daca in viitor se doreste o bara de progres reala, ar fi nevoie de expunerea progresului de descarcare din raspunsul fetch, ceea ce necesita o abordare diferita fata de simpla citire a corpului raspunsului ca JSON.
