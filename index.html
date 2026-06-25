@@ -937,26 +937,44 @@ function autoFitColumn(handle, dir) {
   var table = th.closest('table');
   var colIdx = Array.from(th.parentElement.children).indexOf(th);
 
-  // Măsurăm lățimea maximă necesară folosind un canvas pentru text
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d');
-  var thStyle = window.getComputedStyle(th);
-  ctx.font = thStyle.fontWeight + ' ' + thStyle.fontSize + ' ' + thStyle.fontFamily;
+  // Măsurăm lățimea reală folosind un element DOM clonat, invizibil, fără constrângeri de lățime
+  var measurer = document.createElement('div');
+  measurer.style.position = 'absolute';
+  measurer.style.visibility = 'hidden';
+  measurer.style.whiteSpace = 'nowrap';
+  measurer.style.left = '-9999px';
+  measurer.style.top = '0';
+  document.body.appendChild(measurer);
 
-  var maxWidth = ctx.measureText(th.textContent.trim()).width;
+  var thStyle = window.getComputedStyle(th);
+  measurer.style.font = thStyle.font;
+  measurer.style.fontWeight = thStyle.fontWeight;
+  measurer.style.fontSize = thStyle.fontSize;
+  measurer.style.fontFamily = thStyle.fontFamily;
+  measurer.style.letterSpacing = thStyle.letterSpacing;
+  measurer.style.textTransform = thStyle.textTransform;
+  measurer.textContent = th.textContent.trim();
+  var maxWidth = measurer.offsetWidth;
 
   var rows = table.querySelectorAll('tbody tr');
   rows.forEach(function(row) {
     var cell = row.children[colIdx];
     if (!cell) return;
     var cellStyle = window.getComputedStyle(cell);
-    ctx.font = cellStyle.fontSize + ' ' + cellStyle.fontFamily;
+    measurer.style.fontWeight = cellStyle.fontWeight;
+    measurer.style.fontSize = cellStyle.fontSize;
+    measurer.style.fontFamily = cellStyle.fontFamily;
+    measurer.style.letterSpacing = cellStyle.letterSpacing;
+    measurer.style.textTransform = cellStyle.textTransform;
     var text = cell.getAttribute('title') || cell.textContent || '';
-    var w = ctx.measureText(text.trim()).width;
+    measurer.textContent = text.trim();
+    var w = measurer.offsetWidth;
     if (w > maxWidth) maxWidth = w;
   });
 
-// Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
+  document.body.removeChild(measurer);
+
+  // Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
   var newW = Math.ceil(maxWidth) + 28;
   newW = Math.max(40, newW);
 
