@@ -472,12 +472,11 @@ async function loadRapoarte() {
         const header = rows[0];
         const idxNr  = header.indexOf('Nr Raport');
         const idxLoc = header.indexOf('Locatie');
-        // ── Index de căutare full-text, pe baza Nr Raport ──
         csvSearchIndex = {};
         if (idxNr !== -1) {
           rows.slice(1).forEach(function(row) {
             var nr = (row[idxNr] || '').trim();
-            if (nr) csvSearchIndex[nr.toUpperCase()] = row.join(' ').toLowerCase();
+            if (nr) csvSearchIndex[nr.toUpperCase()] = row.join(' ');
           });
         }
         if (idxNr !== -1 && idxLoc !== -1) {
@@ -529,19 +528,19 @@ function setStatus(type, label) {
 function formatDate(d) { if (!d) return '—'; const p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
 
 function filterFiles() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const q    = document.getElementById('searchInput').value.trim();
   const sort = document.getElementById('sortSelect').value;
   let list = allFiles.filter(f => {
-    var matchesMeta = (f.name||'').toLowerCase().includes(q) ||
-                       (f.location||'').toLowerCase().includes(q) ||
-                       (f.nr||'').toLowerCase().includes(q) ||
-                       (f.date||'').includes(q) ||
-                       (f.locatie||'').toLowerCase().includes(q);
+    if (!q) { f._matchedByContent = false; return true; }
+    var matchesMeta = matchesWholeWord(f.name, q) ||
+                       matchesWholeWord(f.location, q) ||
+                       matchesWholeWord(f.nr, q) ||
+                       matchesWholeWord(f.date, q) ||
+                       matchesWholeWord(f.locatie, q);
     if (matchesMeta) { f._matchedByContent = false; return true; }
-    if (!q) return true;
     var nrKey = (f.nr||'').toUpperCase();
     var content = csvSearchIndex[nrKey];
-    var matchesContent = content ? content.includes(q) : false;
+    var matchesContent = content ? matchesWholeWord(content, q) : false;
     f._matchedByContent = matchesContent;
     return matchesContent;
   });
@@ -800,6 +799,20 @@ async function loadCsv() {
   }
 }
 
+function stripDiacritics(s) {
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function matchesWholeWord(text, query) {
+  if (!query) return true;
+  if (!text) return false;
+  var normText  = stripDiacritics(text).toLowerCase();
+  var normQuery = stripDiacritics(query).toLowerCase();
+  var escaped = normQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var re = new RegExp('\\b' + escaped + '\\b', 'i');
+  return re.test(normText);
+}
+
 function parseCSV(text) {
   const rows = [];
   let row = [], cur = '', inQ = false;
@@ -824,8 +837,8 @@ function parseCSV(text) {
 }
 
 function filterCsv() {
-  const q        = document.getElementById('csvSearch').value.toLowerCase();
-  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  const q        = document.getElementById('csvSearch').value.trim();
+  const filtered = q ? csvData.filter(r => r.some(c => matchesWholeWord(c, q))) : csvData;
   renderCsvFor(filtered, csvHeaders);
   document.getElementById('csvCountBadge').textContent = filtered.length + ' / ' + csvData.length + ' ' + t('rows');
 }
@@ -838,8 +851,8 @@ function isCommentColumn(headerName) {
 
 function onToggleComments() {
   showComments = document.getElementById('toggleComments').checked;
-  const q = document.getElementById('csvSearch').value.toLowerCase();
-  const filtered = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  const q = document.getElementById('csvSearch').value.trim();
+  const filtered = q ? csvData.filter(r => r.some(c => matchesWholeWord(c, q))) : csvData;
   renderCsvFor(filtered, csvHeaders);
 }
 
@@ -879,8 +892,8 @@ function renderCsvFor(rows, headers) {
 
 function sortCsvFor(colIdx) {
   if (csvSortCol === colIdx) { csvSortDir *= -1; } else { csvSortCol = colIdx; csvSortDir = 1; }
-  const q   = document.getElementById('csvSearch').value.toLowerCase();
-  let rows  = q ? csvData.filter(r => r.some(c => (c||'').toLowerCase().includes(q))) : csvData;
+  const q   = document.getElementById('csvSearch').value.trim();
+  let rows  = q ? csvData.filter(r => r.some(c => matchesWholeWord(c, q))) : csvData;
   rows = [...rows].sort((a,b) => (a[colIdx]||'').localeCompare(b[colIdx]||'', undefined, {numeric:true}) * csvSortDir);
   renderCsvFor(rows, csvHeaders);
 }
