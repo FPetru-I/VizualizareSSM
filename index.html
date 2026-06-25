@@ -374,6 +374,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwCsG38ol1Y4N5H6jq4tOpq
 // ── State rapoarte normale ──
 let allFiles = [], currentFile = null, currentBlob = null, sessionToken = null;
 let currentZoom = 100;
+let csvSearchIndex = {}; // { "R106": "text concatenat toate coloanele rand" }
 
 // ── State CSV ──
 let csvData = [], csvHeaders = [], csvSortCol = -1, csvSortDir = 1;
@@ -464,23 +465,31 @@ async function loadRapoarte() {
     // ── Construim map nr → locatie din CSV ──
     var locatieMap = {};
     try {
-      const dataCsv = await resCsv.json();
-      if (dataCsv.status === 'success' && dataCsv.csv) {
-        const rows = parseCSV(dataCsv.csv);
-        if (rows.length >= 2) {
-          const header = rows[0];
-          const idxNr  = header.indexOf('Nr Raport');
-          const idxLoc = header.indexOf('Locatie');
-          if (idxNr !== -1 && idxLoc !== -1) {
-            rows.slice(1).forEach(function(row) {
-              var nr  = (row[idxNr]  || '').trim();
-              var loc = (row[idxLoc] || '').trim();
-              if (nr) locatieMap[nr] = loc;
-            });
-          }
+    const dataCsv = await resCsv.json();
+    if (dataCsv.status === 'success' && dataCsv.csv) {
+      const rows = parseCSV(dataCsv.csv);
+      if (rows.length >= 2) {
+        const header = rows[0];
+        const idxNr  = header.indexOf('Nr Raport');
+        const idxLoc = header.indexOf('Locatie');
+        // ── Index de căutare full-text, pe baza Nr Raport ──
+        csvSearchIndex = {};
+        if (idxNr !== -1) {
+          rows.slice(1).forEach(function(row) {
+            var nr = (row[idxNr] || '').trim();
+            if (nr) csvSearchIndex[nr.toUpperCase()] = row.join(' ').toLowerCase();
+          });
+        }
+        if (idxNr !== -1 && idxLoc !== -1) {
+          rows.slice(1).forEach(function(row) {
+            var nr  = (row[idxNr]  || '').trim();
+            var loc = (row[idxLoc] || '').trim();
+            if (nr) locatieMap[nr] = loc;
+          });
         }
       }
-    } catch(e) { console.warn('CSV locatie load error:', e); }
+    }
+  } catch(e) { console.warn('CSV locatie load error:', e); }
 
     // ── Adăugăm locatie la fiecare fișier ──
     // ── Adăugăm locatie la fiecare fișier ──
@@ -523,10 +532,18 @@ function filterFiles() {
   const q    = document.getElementById('searchInput').value.toLowerCase();
   const sort = document.getElementById('sortSelect').value;
   let list = allFiles.filter(f => {
-    return (f.name||'').toLowerCase().includes(q) ||
-           (f.location||'').toLowerCase().includes(q) ||
-           (f.nr||'').toLowerCase().includes(q) ||
-           (f.date||'').includes(q);
+    var matchesMeta = (f.name||'').toLowerCase().includes(q) ||
+                       (f.location||'').toLowerCase().includes(q) ||
+                       (f.nr||'').toLowerCase().includes(q) ||
+                       (f.date||'').includes(q) ||
+                       (f.locatie||'').toLowerCase().includes(q);
+    if (matchesMeta) { f._matchedByContent = false; return true; }
+    if (!q) return true;
+    var nrKey = (f.nr||'').toUpperCase();
+    var content = csvSearchIndex[nrKey];
+    var matchesContent = content ? content.includes(q) : false;
+    f._matchedByContent = matchesContent;
+    return matchesContent;
   });
   const getNr = f => parseInt((f.nr||'').replace(/[^0-9]/g,'')) || 0;
   if (sort === 'nr_asc') list.sort((a,b) => getNr(a) - getNr(b));
@@ -552,7 +569,7 @@ function renderList(files) {
       + ' onmouseenter="handlePrefetchDown(this)">'
       + '<div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
       + '<div class="file-info">'
-      + '<div class="file-name">' + f.name + (cached ? ' <span style="font-size:9px;color:var(--yes);">●</span>' : '') + '</div>'
+      + '<div class="file-name">' + f.name + (cached ? ' <span style="font-size:9px;color:var(--yes);">●</span>' : '') + (f._matchedByContent ? ' <span style="font-size:9px;color:var(--accent);" title="Găsit în conținutul raportului">🔍</span>' : '') + '</div>'
       + '<div class="file-meta">'
       + '<span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + formatDate(f.date) + '</span>'
       + (f.location ? '<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + f.location + '</span>' : '')
