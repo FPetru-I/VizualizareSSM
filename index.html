@@ -956,10 +956,9 @@ function autoFitColumn(handle, dir) {
     if (w > maxWidth) maxWidth = w;
   });
 
-  // Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
+// Adăugăm padding-ul celulei (stânga + dreapta) + o marjă de siguranță
   var newW = Math.ceil(maxWidth) + 28;
   newW = Math.max(40, newW);
-  newW = Math.min(newW, 480); // plafon pentru headere foarte lungi (intrebari complete)
 
   th.style.width = newW + 'px';
   th.style.minWidth = newW + 'px';
